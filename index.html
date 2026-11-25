@@ -853,6 +853,7 @@ function spawn(type) {
     e.mul = 1 + Math.min(.5, (tier - 1) * .05);
     e.cd = Math.max(.35, e.T.cd - tier * .04);
     banner(wave === 100 ? 'Final Boss: Scythe Lord' : `Boss ${tier}: Scythe Reaper`);
+    e.finalBoss = wave === 100;
     if (wave === 50) { e.reaper = true; banner('The Reaper'); }
   }
   sfx(70, .5, 'sawtooth', .05); sparks(e.x, GY, '#5a4636', 12);
@@ -1070,7 +1071,7 @@ function tutUpdate(dt) {
   } else if (T.step === 7) {
     if (!T.spawned) {
       T.spawned = 1; spawn('boss'); const b = enemies[enemies.length - 1];
-      b.max = b.hp = b.ghost = 140; b.mul = .75; b.cd = 2.2; b.nb = true; banner('Training Reaper');
+      b.max = b.hp = b.ghost = 140; b.mul = .75; b.cd = 2.2; b.nb = true; b.tutorialReaper = true; banner('Training Reaper');
     }
     if (T.spawned && alive === 0) { if ((T.t += dt) > 1.2) tutNext(); } else T.t = 0;
   }
@@ -1814,10 +1815,178 @@ function props() {
 function ln(x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
 function limb(x, y, ang, d, l = 21) {
   const mx = x + Math.cos(ang[0]) * l * d, my = y + Math.sin(ang[0]) * l, ex = mx + Math.cos(ang[1]) * l * d, ey = my + Math.sin(ang[1]) * l;
-  ln(x, y, mx, my); ln(mx, my, ex, ey); return [mx, my, ex, ey];
+  return [mx, my, ex, ey];
 }
-// zombie palette per type: [shirt rags, glowing eyes, trousers]
-const ZC = { grunt: ['#4a3f58', '#d6ff4a', '#35404a'], ninja: ['#2c3a52', '#7fe7ff', '#202a3a'], brute: ['#5a3a2e', '#ff5a3a', '#3a2a20'], boss: ['#3a2a2a', '#ffcf3a', '#2a2020'] };
+// Outfit colors are independent from health, hitboxes, and gameplay.
+const COSTUMES = {
+  hero:   ['#1d334d','#426d8b','#9bd2e3','#ffe3a0','#ff7769','#142333',10,8],
+  grunt:  ['#343d31','#657351','#a6b783','#d9e9b5','#e6fc78','#252b27',8,7],
+  ninja:  ['#242445','#4d4779','#9895d5','#c8c3ff','#82f5ff','#242032',7,8],
+  brute:  ['#412928','#824a3c','#d48a66','#f3ca8f','#ff9865','#382e35',14,12],
+  boss:   ['#30213f','#67426d','#ba8eae','#ffcf8b','#ffb56e','#281e36',12,11],
+  reaper: ['#183c3a','#32655c','#84bea9','#dcf1d5','#91ffcd','#182b34',12,10],
+  lord:   ['#441e3c','#843653','#e17c8e','#ffe2a6','#ff758a','#302439',13,12],
+  ally:   ['#193c42','#397d79','#86d1ba','#d8fff0','#90ffda','#1e333a',9,7],
+  dummy:  ['#493530','#886844','#c69a5a','#f9de9b','#ff7858','#3d3034',10,9],
+};
+function costumeId(f) {
+  if (f.isP) return 'hero';
+  if (f.dummy) return 'dummy';
+  if (f.ally) return 'ally';
+  if (f.reaper || f.tutorialReaper) return 'reaper';
+  if (f.finalBoss) return 'lord';
+  return f.type;
+}
+function artPoly(points, fill, edge = '#111422', width = 1.25) {
+  ctx.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const [x, y] = points[i];
+    if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+  }
+  ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  if (edge) { ctx.strokeStyle = edge; ctx.lineWidth = width; ctx.stroke(); }
+}
+function artLine(x, y, xx, yy, color, width = 1.4) {
+  ctx.strokeStyle = color; ctx.lineWidth = width; ln(x, y, xx, yy);
+}
+function artDot(x, y, r, color) { ctx.fillStyle = color; dot(x, y, r); }
+function skinSegment(x, y, xx, yy, width, base, light) {
+  artLine(x, y, xx, yy, '#101321', width + 3);
+  artLine(x, y, xx, yy, base, width);
+  artLine(x, y - 1.2, xx, yy - 1.2, light, Math.max(1, width * .23));
+}
+function drawCostumeLimb(id, C, ax, ay, limb, isLeg, d) {
+  const [shadow, base, light, trim, accent, boot, arm, leg] = COSTUMES[id];
+  const [mx, my, x, y] = limb, width = isLeg ? leg : arm;
+  skinSegment(ax, ay, mx, my, width, C(shadow), C(base));
+  skinSegment(mx, my, x, y, width * .82, C(isLeg ? base : light), C(isLeg ? light : trim));
+  if (id === 'grunt' || id === 'ally') {
+    artLine(mx - 3, my - 3, mx + 3, my + 1, C(accent), 1);
+  } else if (id !== 'ninja') {
+    artDot(mx, my, width * .39, C(boot));
+    artDot(mx, my - 1, width * .23, C(trim));
+  }
+  if (isLeg) {
+    skinSegment(x - d * 2, y, x + d * (id === 'brute' ? 9 : 7), y + 1, width * .74, C(boot), C(base));
+  } else {
+    artDot(x, y, width * .47 + 1, C(boot));
+    artDot(x, y - .5, width * .44, C(light));
+    if (id !== 'hero') artLine(x - d, y - 1, x + d * 3, y + 1.5, C(shadow), 1);
+  }
+}
+function drawCostumeCloth(id, nx, ny, hip, d, speed, C) {
+  if (!['hero','boss','reaper','lord','ninja'].includes(id)) return;
+  const [shadow, base, , , accent] = COSTUMES[id];
+  const ripple = Math.sin(clock * 7 + nx) * 4;
+  const tail = 22 + Math.min(24, Math.abs(speed) * .08);
+  ctx.save(); ctx.translate(nx, ny); ctx.scale(d, 1);
+  if (id === 'ninja') {
+    artPoly([[-3,1],[-12,-2],[-36-tail*.22,8+ripple],[-26,12+ripple],[-34,15+ripple],[-8,7]], C(accent));
+  } else {
+    const cape = id === 'hero' ? '#9e333c' : shadow, shine = id === 'hero' ? '#ff7769' : base;
+    artPoly([[2,1],[-12,0],[-tail*.6,17+ripple],[-tail,hip-ny+27+ripple],
+      [-tail*.65,hip-ny+19+ripple],[-tail*.46,hip-ny+27+ripple],[-2,hip-ny+17]], C(cape));
+    artPoly([[-8,3],[-tail*.59,19+ripple],[-tail,hip-ny+26+ripple],[-tail*.47,22+ripple]], C(shine), null);
+  }
+  ctx.restore();
+}
+function drawCostumeBody(id, nx, sy, hip, d, C) {
+  const [shadow, base, light, trim, accent, boot, arm] = COSTUMES[id];
+  const broad = id === 'brute' ? 17 : id === 'boss' || id === 'lord' ? 14 : id === 'ninja' ? 9 : 12;
+  ctx.save(); ctx.translate(nx * .48, (sy + hip) / 2); ctx.scale(d, 1);
+  ctx.rotate(Math.atan2(nx * d, hip - sy) * .65);
+  artPoly([[-broad,-15],[broad-2,-15],[broad+1,-7],[7,10],[5,16],[-7,16],[-broad+2,-5]], C(shadow), '#101321', 2);
+  artPoly([[-broad+2,-11],[broad-3,-12],[broad-1,-5],[6,6],[-6,8],[-broad+3,-3]], C(base));
+  if (id === 'hero' || id === 'boss' || id === 'lord' || id === 'brute') {
+    artPoly([[-broad+3,-11],[-3,-12],[1,-2],[-5,4],[-broad+3,-1]], C(light));
+    artPoly([[0,-12],[broad-3,-12],[broad-1,-4],[5,3],[0,-2]], C(light));
+    artLine(-broad+4,-10,-5,-10,C(trim),1.3);
+    artLine(4,-10,broad-4,-10,C(trim),1.3);
+    artPoly([[0,-5],[4,0],[0,5],[-4,0]], C(accent));
+    if (id === 'brute') {
+      for (const x of [-14, 12]) {
+        artPoly([[x-6,-10],[x,-19],[x+6,-10],[x+4,-4],[x-4,-4]], C(light));
+        artDot(x,-10,1.7,C(trim));
+      }
+    }
+  } else if (id === 'reaper') {
+    artPoly([[-broad+2,-11],[-6,-13],[0,2],[7,-13],[broad-2,-9],[4,10],[-4,10]], C(light));
+    artPoly([[0,-4],[4,1],[0,6],[-4,1]], C(accent));
+  } else if (id === 'grunt' || id === 'ally') {
+    artPoly([[-broad+2,-10],[-3,-12],[3,-4],[-1,3],[-5,-1],[-9,6]], C(light));
+    for (let i=0;i<3;i++) artLine(2,-3+i*3,7,-1+i*3,C(id === 'ally' ? accent : trim),1.4);
+  } else {
+    artPoly([[-broad+1,-12],[-broad+5,-14],[7,7],[5,10]], C(id === 'ninja' ? light : trim));
+    if (id === 'dummy') {
+      artDot(3,-2,6,C(boot)); artDot(3,-2,4.5,C(accent)); artDot(3,-2,1.8,C(trim));
+    }
+  }
+  artPoly([[-8,8],[8,8],[9,13],[-8,13]], C(boot));
+  artPoly([[-3,8],[3,8],[3,13],[-3,13]], C(trim));
+  if (id === 'hero') artPoly([[-4,14],[5,14],[7,26],[0,22],[-5,25]], C('#cb4d4f'));
+  ctx.restore();
+}
+function drawCostumeHead(id, x, y, d, C) {
+  const [shadow, base, light, trim, accent, boot] = COSTUMES[id];
+  ctx.save(); ctx.translate(x,y); ctx.scale(d,1);
+  const p = (coords, color, edge) => artPoly(coords, C(color), edge);
+  const line = (x1,y1,x2,y2,color,width) => artLine(x1,y1,x2,y2,C(color),width);
+  if (id === 'hero') {
+    p([[-15,-3],[-12,-13],[-4,-18],[6,-16],[14,-10],[16,2],[10,13],[-4,14],[-12,7]], base);
+    p([[-12,-6],[-8,-13],[-3,-15],[6,-14],[10,-9],[3,-8],[-2,-4]], light);
+    p([[0,-7],[14,-9],[14,-1],[8,4],[-2,1]], boot);
+    p([[1,-4],[13,-6],[12,-3],[3,0]], accent, null);
+    p([[7,4],[14,0],[10,11],[1,12]], trim);
+    line(-10,1,-7,7,trim,2);
+    line(-4,-17,0,-21,trim,2);
+    p([[-5,-18],[-15,-24],[-24,-19],[-15,-20],[-8,-14]], '#ff7769');
+  } else if (id === 'grunt' || id === 'ally') {
+    p([[-13,1],[-12,-9],[-6,-14],[6,-12],[12,-7],[14,2],[10,12],[2,13],[-1,8],[-9,8]], base);
+    p([[-11,-7],[-6,-13],[5,-11],[3,-5],[-2,-2],[-10,-1]], light);
+    p([[2,-5],[11,-6],[12,0],[5,3],[1,0]], boot);
+    artDot(8,-2,2.2,C(accent));
+    p([[2,5],[12,3],[10,9],[3,10]], boot);
+    for (const i of [4,7,10]) line(i,5,i,8,trim,1.3);
+    if (id === 'ally') p([[-13,-1],[-11,-7],[-5,-4],[-9,1]], accent);
+    else { line(-8,-9,-4,-5,shadow); line(-4,-5,-2,-8,shadow); }
+  } else if (id === 'ninja') {
+    p([[-14,0],[-12,-9],[-3,-16],[6,-15],[13,-8],[15,3],[7,12],[-5,10]], base);
+    p([[-12,-5],[-3,-14],[7,-13],[11,-8],[0,-7]], light);
+    p([[-1,-6],[13,-8],[13,-2],[5,1],[-2,-1]], boot);
+    line(4,-3,12,-5,accent,2.4);
+    p([[0,1],[13,-1],[11,8],[5,11],[-2,7]], shadow);
+    line(3,4,11,1,light,1.3);
+  } else if (id === 'brute') {
+    p([[-17,2],[-15,-11],[-8,-16],[7,-15],[16,-7],[17,8],[11,14],[-7,14]], base);
+    p([[-15,-8],[-9,-14],[7,-13],[12,-8],[0,-6],[-9,-1]], light);
+    p([[1,-5],[15,-7],[15,1],[5,3]], boot);
+    line(6,-2,14,-4,accent,2.5);
+    p([[2,4],[15,2],[16,10],[10,14],[-1,13]], shadow);
+    p([[6,9],[7,0],[10,8]], trim);
+    p([[12,8],[14,0],[16,7]], trim);
+    line(-9,-9,-5,-5,trim,1.7);
+  } else if (id === 'dummy') {
+    p([[-12,8],[-13,-9],[-8,-15],[8,-15],[13,-8],[11,8],[6,13],[-7,13]], light);
+    line(-9,-7,9,-7,base,2); line(-9,6,9,6,base,2);
+    artDot(4,-1,5.4,C(shadow)); artDot(4,-1,4.1,C(accent)); artDot(4,-1,1.8,C(trim));
+  } else {
+    if (id === 'reaper') {
+      p([[-18,11],[-15,-4],[-12,-15],[0,-26],[11,-15],[16,-7],[16,10],[8,15],[-6,16]], shadow);
+      p([[-16,10],[-11,-12],[0,-23],[10,-13],[7,-10],[-3,-15],[-9,-3],[-8,12]], base);
+    } else {
+      p([[-14,0],[-14,-12],[-18,-22],[-6,-17],[0,-24],[7,-18],[16,-23],[14,-10],[16,-1],[13,10],[-6,13]], base);
+      p([[-16,-21],[-6,-15],[0,-23],[7,-16],[15,-22],[12,-10],[-12,-9]], trim);
+      if (id === 'lord') p([[-2,-16],[1,-24],[5,-16],[1,-11]], accent);
+    }
+    p([[-8,-9],[3,-12],[12,-7],[13,2],[8,8],[7,13],[0,13],[-2,8],[-8,4]], light);
+    p([[1,-5],[12,-7],[11,0],[7,2],[2,0]], boot);
+    line(5,-3,11,-4,accent,2.3);
+    p([[2,5],[9,4],[8,10],[2,10]], boot);
+    line(5,6,5,9,trim,1);
+  }
+  ctx.restore();
+}
+
 const dot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
 // Weapon art uses a hand-local axis: x runs from grip to tip, y across the blade.
 // Shared by fighters, shop previews and thrown daggers; all combat values stay in WEAPONS.
@@ -1981,7 +2150,7 @@ function drawF(f) {
   const e = a ? Math.sin(Math.PI * Math.min(1, f.t / a.dur)) : 0, fh = f.flash > 0, C = c => fh ? '#fff' : c;
   const moving = Math.abs(f.vx) > 20 && f.gr && st === 'idle';
   const sw = moving ? (P ? Math.sin(f.ph) * .7 : (Math.sin(f.ph * .9) + Math.sin(f.ph * 2.1) * .3) * .4) : 0;
-  const Z = ZC[f.type] || ZC.grunt;
+  const id = costumeId(f), palette = COSTUMES[id];
   const rp = f.rise > 0 ? 1 - f.rise / f.riseMax : 1;
   ctx.save(); ctx.translate(f.x, f.y);
   if (f.rise <= 0) { ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(0, GY - f.y + 2, 22 * s, 5, 0, 0, 7); ctx.fill(); }
@@ -1995,18 +2164,24 @@ function drawF(f) {
   else if (!P && st === 'idle') ctx.rotate(Math.sin(clock * 2 + f.sd) * .04 * d);
   if (f.weak) ctx.translate(0, 22 * s);
   ctx.scale(s, s); ctx.lineCap = ctx.lineJoin = 'round'; ctx.lineWidth = 5;
-  const skin = C(f.slow > 0 ? '#9fe8ff' : f.c); ctx.strokeStyle = ctx.fillStyle = skin;
+  const T = color => C(f.slow > 0 && color === palette[2] ? '#b9f0ff' : color);
   const equippedArt = P ? weapon() : null;
   const armedAttack = a && P && !f.dive && (st === 'punch' || equippedArt.id !== 'fists');
   const swing = armedAttack ? combatPose(equippedArt, a, f.t) : null;
   const cast = P && st !== 'dead' && st !== 'hit' ? ultimateCast : null;
   const lean = (swing ? swing.lean : st === 'punch' ? 7 : st === 'kick' ? -7 : st === 'hit' ? -10 : f.blocking ? -3 : 0) + (P ? 0 : 9) + (f.rise > 0 ? 8 : 0);
   const hip = -42 + (st === 'idle' && f.gr && !moving ? Math.sin(clock * 4 + f.x) * .6 : 0) - (!P && moving ? Math.abs(Math.sin(f.ph)) * 3 : 0);
-  const nx = lean * d, ny = hip - 34, sy = ny + 5, mid = (hip + ny) / 2;
+  const nx = lean * d, ny = hip - 34, sy = ny + 5;
   let fl = [1.45 + sw, 1.5 + sw * .3], bl = [1.7 - sw, 1.65 - sw * .3], fa = [.6 + sw * .5, -1.1], ba = [.9 - sw * .5, -.8];
   if (!P) { const z = Math.sin(clock * 3 + f.sd) * .1; fl = [1.5 + sw, 1.55 + sw * .4]; bl = [1.65 - sw * .5, 1.95 - sw]; fa = [.05 + z, -.05]; ba = [.2 - z, .1]; }
   if (!f.gr && st === 'idle') { fl = [1, 1.9]; bl = [1.9, 1.3]; fa = [-.5, -1.3]; ba = [-.2, -1.4]; }
   if (f.blocking) { fa = [.2, -1.5]; ba = [.35, -1.4]; }
+  if (st === 'idle' && !f.rise && !f.weak && f.gr && !f.blocking) {
+    if (id === 'brute') { fa = [.66, .38]; ba = [1.05, .7]; }
+    if (id === 'ninja') { fa = [.32, -.67]; ba = [1.15, .9]; }
+    if (id === 'boss' || id === 'lord' || id === 'reaper') { fa = [.7, -.35]; ba = [1.15, 1.3]; }
+    if (id === 'dummy') { fa = [.9, 1.2]; ba = [1.23, 1.48]; }
+  }
   if (st === 'punch') fa = [.6 * (1 - e) - .05 * e, -1.1 * (1 - e)];
   if (st === 'kick' && !swing) fl = [1.45 - 1.65 * e, 1.5 - 1.65 * e];
   if (swing) {
@@ -2026,39 +2201,34 @@ function drawF(f) {
   if (st === 'hit' || st === 'dead') { fa = [2, 2.4]; ba = [2.4, 2.6]; fl = [1.2, 1.9]; bl = [1.9, 1.5]; }
   if (f.rise > 0) { const ph = Math.sin(rp * 26); fa = [.5 + ph * .4, 1 + ph * .3]; ba = [.8 - ph * .4, 1.2 - ph * .3]; }
   if (f.weak) { fa = [2, 2.4]; ba = [2.4, 2.6]; fl = [1.2, 1.9]; bl = [1.9, 1.5]; }
-  // armour pieces (hero) and rags (zombies)
-  const legP = L => { ctx.strokeStyle = C('#8a94b0'); ctx.lineWidth = 8; ln(0, hip, L[0], L[1]); ctx.strokeStyle = C('#b9c3da'); ln(L[0], L[1], L[2], L[3]); ctx.fillStyle = C('#e0b85a'); dot(L[0], L[1], 4.5); ctx.fillStyle = ctx.strokeStyle = C('#2c2433'); dot(L[2], L[3], 6); ctx.lineWidth = 6; ln(L[2], L[3], L[2] + d * 7, L[3] + 2); };
-  const legZ = L => { ctx.strokeStyle = C(Z[2]); ctx.lineWidth = 7; ln(0, hip, L[0] * .92, hip + (L[1] - hip) * .92); ln(L[0], L[1], L[0] + (L[2] - L[0]) * .4, L[1] + (L[3] - L[1]) * .4); };
-  const armP = A => { ctx.strokeStyle = C('#8a94b0'); ctx.lineWidth = 7; ln(nx, sy, A[0], A[1]); ctx.strokeStyle = C('#b9c3da'); ctx.lineWidth = 8; ln(A[0], A[1], A[2], A[3]); ctx.fillStyle = C('#cfd6e8'); dot(A[2], A[3], 5.5); };
-  const armZ = A => { ctx.strokeStyle = C(Z[0]); ctx.lineWidth = 7; ln(nx, sy, nx + (A[0] - nx) * .6, sy + (A[1] - sy) * .6); };
-  if (P) {
-    const t = Math.sin(clock * 8 + f.x * .02) * 3, tail = 24 + Math.min(34, Math.abs(f.vx) * .08);
-    ctx.fillStyle = C('#8f1226'); ctx.beginPath(); ctx.moveTo(nx - d * 2, ny + 1); ctx.lineTo(nx - d * tail * .6, ny + 6 + t); ctx.lineTo(nx - d * tail, hip + 28 + t); ctx.lineTo(nx - d * 6, hip + 14); ctx.fill();
-  }
-  ctx.globalAlpha = .75; ctx.strokeStyle = P ? C('#6c7590') : skin; ctx.lineWidth = 5;
-  const bL = limb(0, hip, bl, d), bA = limb(nx, sy, ba, d, 17); P ? (legP(bL), armP(bA)) : (legZ(bL), armZ(bA));
+  drawCostumeCloth(id, nx, ny, hip, d, f.vx, C);
+  const leg = angles => {
+    const points = limb(0, hip, angles, d);
+    drawCostumeLimb(id, T, 0, hip, points, true, d);
+  };
+  const arm = angles => {
+    const points = limb(nx, sy, angles, d, 17);
+    drawCostumeLimb(id, T, nx, sy, points, false, d);
+    return points;
+  };
+  ctx.globalAlpha = .77;
+  leg(bl); const bA = arm(ba);
   if (P && ['daggers', 'thunder', 'fists'].includes(equippedArt.id)) {
     const rearAngle = swing && equippedArt.twin && f.t > a.hit + .035
       ? combatPose(equippedArt, a, f.t - .09).angle : ba[1];
     drawWeapon(equippedArt, bA[2], bA[3], rearAngle, d, fh, clock + .4);
   }
   ctx.globalAlpha = 1;
-  // torso
-  ctx.lineWidth = 5; ctx.strokeStyle = skin; ln(0, hip, nx, ny);
-  if (P) {
-    ctx.strokeStyle = C('#4a5068'); ctx.lineWidth = 7; ln(0, hip, nx, ny);
-    ctx.strokeStyle = C('#b9c3da'); ctx.lineWidth = 13; ln(nx * .15, hip - 9, nx * .9, ny + 3);
-    ctx.strokeStyle = C('#e0b85a'); ctx.lineWidth = 2.5; ln(nx * .55 - 6, mid - 3, nx * .55 + 6, mid - 3);
-    ctx.strokeStyle = C('#5a3a22'); ctx.lineWidth = 6; ln(-6, hip - 1, 6, hip - 1); ctx.fillStyle = C('#e0b85a'); ctx.fillRect(-2.5, hip - 4, 5, 6);
-    ctx.fillStyle = C('#a3162d'); ctx.beginPath(); ctx.moveTo(-4, hip + 2); ctx.lineTo(4, hip + 2); ctx.lineTo(d * 3, hip + 19); ctx.fill();
-  } else {
-    ctx.strokeStyle = C(Z[0]); ctx.lineWidth = 10; ln(nx * .1, hip - 3, nx * .95, ny + 4);
-    ctx.fillStyle = C(Z[0]); for (let i = 0; i < 3; i++) { const bx = -5 + i * 5, bh = 5 + ((f.sd * (i + 2)) % 1) * 7; ctx.beginPath(); ctx.moveTo(bx - 2.5, hip - 3); ctx.lineTo(bx + 2.5, hip - 3); ctx.lineTo(bx, hip - 3 + bh); ctx.fill(); }
-    if (f.type === 'ninja' || f.type === 'boss') { ctx.fillStyle = skin; dot(nx * .5, mid, 5.5); ctx.strokeStyle = C('#3a2a2a'); ctx.lineWidth = 1.5; for (let k = 0; k < 3; k++) ln(nx * .5 - 4, mid - 4 + k * 3.5, nx * .5 + 4, mid - 4 + k * 3.5); }
-    ctx.strokeStyle = fh ? '#fff' : '#5a0f12'; ctx.lineWidth = 2; ln(nx * .35 - 4, mid - 8, nx * .35 + 5, mid - 2);
+  leg(fl);
+  drawCostumeBody(id, nx, sy, hip, d, T);
+  const fA = arm(fa);
+  const shoulder = palette[2];
+  if (id === 'hero' || id === 'lord') {
+    artPoly([[nx-9,sy-6],[nx+7,sy-7],[nx+10,sy],[nx+4,sy+5],[nx-8,sy+4]], T(shoulder));
+    artLine(nx-5,sy-4,nx+5,sy-5,C(palette[3]),1.7);
   }
-  ctx.strokeStyle = P ? C('#6c7590') : skin; ctx.lineWidth = 5;
-  const fL = limb(0, hip, fl, d), fA = limb(nx, sy, fa, d, 17); P ? (legP(fL), armP(fA)) : (legZ(fL), armZ(fA));
+  const headX = nx + d * (id === 'grunt' ? 5 : 2), headY = ny - 14;
+  drawCostumeHead(id, headX, headY, d, T);
   if (P) {
     const w = equippedArt;
     const backStrike = swing && w.twin && f.t > a.hit + .035;
@@ -2074,27 +2244,11 @@ function drawF(f) {
     }
     drawWeapon(w, fA[2], fA[3], wa, d, fh, swing ? f.t * 8 : clock);
     // Fingers cross the grip; gauntlets and wraps already include their own hand shape.
-    if (!['thunder', 'fists'].includes(w.id)) { ctx.fillStyle = C('#cfd6e8'); dot(fA[2], fA[3], 3.6); }
-    ctx.fillStyle = C('#b9c3da'); dot(nx, sy, 8.5); ctx.strokeStyle = C('#e0b85a'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(nx, sy, 8.5, 0, 7); ctx.stroke();
-    const hx = nx + d * 2, hy = ny - 12;
-    ctx.fillStyle = C('#b9c3da'); dot(hx, hy, 12);
-    ctx.strokeStyle = C('#e0b85a'); ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(hx, hy, 12, Math.PI * 1.1, Math.PI * 1.9); ctx.stroke();
-    ctx.fillStyle = '#0b0d17'; ctx.fillRect(d > 0 ? hx + 1 : hx - 11, hy - 3, 10, 5); ctx.fillStyle = C('#ffd166'); ctx.fillRect(d > 0 ? hx + 7 : hx - 9, hy - 2, 2, 2);
-    ctx.strokeStyle = C('#c01c32'); ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hx - d * 2, hy - 11);
-    ctx.quadraticCurveTo(hx - d * 14, hy - 20 + Math.sin(clock * 9) * 3, hx - d * (22 + Math.abs(f.vx) * .05), hy - 4 + Math.sin(clock * 8) * 4); ctx.stroke();
-  } else {
-    const hx = nx + d * 6, hy = ny - 9 + Math.sin(clock * 3 + f.sd) * 1.2;
-    ctx.fillStyle = skin; dot(hx, hy, 10.5);
-    ctx.strokeStyle = C('#2e2a24'); ctx.lineWidth = 2; for (let k = 0; k < 3; k++) ln(hx - 6 + k * 4, hy - 9, hx - 8 + k * 5 - d * 2, hy - 15 - (k % 2) * 3);
-    ctx.fillStyle = C('#e8e0c8'); dot(hx - d * 5, hy - 5, 4);
-    ctx.fillStyle = '#0b0d17'; dot(hx + d * 4, hy - 2, 3.4); ctx.fillStyle = C(Z[1]); dot(hx + d * 5, hy - 2, 1.7);
-    ctx.strokeStyle = '#2a0d10'; ctx.lineWidth = 2; ln(hx + d * 2, hy + 5, hx + d * 9, hy + 6);
-    ctx.strokeStyle = C('#e8e0c8'); ctx.lineWidth = 1.3; ln(hx + d * 4, hy + 5, hx + d * 4, hy + 8); ln(hx + d * 7, hy + 5.5, hx + d * 7, hy + 8.5);
-    if (f.type === 'boss') {
-      ctx.fillStyle = C('#e0b020'); ctx.beginPath(); ctx.moveTo(hx - 9, hy - 9); ctx.lineTo(hx - 9, hy - 21); ctx.lineTo(hx - 4, hy - 14); ctx.lineTo(hx, hy - 23); ctx.lineTo(hx + 4, hy - 14); ctx.lineTo(hx + 9, hy - 21); ctx.lineTo(hx + 9, hy - 9); ctx.fill();
-      // the boss wields the Haunted Scythe
-      if (f.rise <= 0 && !f.weak) drawScythe(fA[2], fA[3], st === 'punch' ? -1.4 + e * 2.3 : -1.2 + Math.sin(clock * 2 + f.sd) * .1, d, 70, '#9affc8', fh);
-    }
+    if (!['thunder', 'fists'].includes(w.id)) artDot(fA[2], fA[3], 3.6, C(palette[2]));
+  } else if (f.type === 'boss' && f.rise <= 0 && !f.weak) {
+    const ang = st === 'punch' ? -1.4 + e * 2.3 : -1.2 + Math.sin(clock * 2 + f.sd) * .1;
+    drawScythe(fA[2], fA[3], ang, d, 70, palette[4], fh);
+    artDot(fA[2], fA[3], 3.6, T(palette[2]));
   }
   if (f.blocking) {
     ctx.save(); ctx.scale(d, 1); ctx.strokeStyle = 'rgba(127,208,255,.65)'; ctx.lineWidth = 3;
@@ -2102,7 +2256,7 @@ function drawF(f) {
   }
   ctx.restore();
   if (f.rise > 0) {
-    const sk = f.c, dd = f.dir;
+    const sk = palette[2], dd = f.dir;
     ctx.save(); ctx.translate(f.x, f.y); ctx.lineCap = 'round';
     ctx.fillStyle = '#2b1f17'; ctx.beginPath(); ctx.ellipse(0, 1, 30 * s, 7, 0, 0, 7); ctx.fill();
     ctx.fillStyle = '#4a382a';
@@ -2121,22 +2275,29 @@ function drawF(f) {
     ctx.restore();
   }
   if (!P && st !== 'dead' && f.rise <= 0 && !f.deco) {
-    const w = 44 * s, x = f.x - w / 2, y = f.y - 100 * s;
+    const w = 44 * s, x = f.x - w / 2, y = f.y - (f.weak ? 90 : 121) * s;
     ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(x - 1, y - 1, w + 2, 7);
-    ctx.fillStyle = f.c; ctx.fillRect(x, y, w * Math.max(0, f.hp / f.max), 5);
+    ctx.fillStyle = palette[4]; ctx.fillRect(x, y, w * Math.max(0, f.hp / f.max), 5);
   }
 }
 function drawSpook(g) {
-  const bob = Math.sin(clock * 6 + g.t) * 5;
-  ctx.save(); ctx.translate(g.x, g.y + bob); ctx.globalAlpha = Math.min(1, g.life * 2) * .85;
+  const bob = Math.sin(clock * 6 + g.t) * 5, ripple = Math.sin(clock * 9 + g.t) * 5;
+  ctx.save(); ctx.translate(g.x, g.y + bob); ctx.scale(g.d, 1);
+  ctx.globalAlpha = Math.min(1, g.life * 2) * .92;
   if (g.k === 'spirit') {
-    ctx.shadowColor = '#9affc8'; ctx.shadowBlur = 14; ctx.fillStyle = '#d8fff0'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, 7); ctx.fill();
-    ctx.fillStyle = 'rgba(154,255,200,.55)'; ctx.beginPath(); ctx.moveTo(0, -7); ctx.quadraticCurveTo(-g.d * 22, -4, -g.d * 38, 9); ctx.quadraticCurveTo(-g.d * 18, 5, 0, 7); ctx.fill();
+    artPoly([[-35,9+ripple],[-17,-5],[-4,-10],[10,-1],[4,10],[-11,12]], '#399e99');
+    artPoly([[-27,8+ripple],[-12,0],[-3,-8],[6,-2],[0,7],[-12,9]], '#92ffe0', null);
+    artPoly([[-6,-8],[2,-11],[9,-2],[5,8],[-3,10],[-9,1]], '#e3fff3');
+    artLine(2,-3,6,-2,'#264552',2);
+    artDot(-20, -7, 2, '#80f5d9'); artDot(-30, 0, 1.3, '#80f5d9');
   } else {
-    ctx.shadowColor = '#c8fff0'; ctx.shadowBlur = 16; ctx.fillStyle = 'rgba(225,255,245,.78)';
-    ctx.beginPath(); ctx.arc(0, -8, 20, Math.PI, 0); ctx.lineTo(20, 24); ctx.lineTo(10, 15); ctx.lineTo(0, 24); ctx.lineTo(-10, 15); ctx.lineTo(-20, 24); ctx.closePath(); ctx.fill();
-    ctx.shadowBlur = 0; ctx.fillStyle = '#16322c'; dot(-7 + g.d * 2, -10, 3.5); dot(7 + g.d * 2, -10, 3.5);
-    ctx.beginPath(); ctx.ellipse(g.d * 2, 2, 4, 6, 0, 0, 7); ctx.fill();
+    artPoly([[-30,10+ripple],[-18,-8],[-10,-20],[3,-25],[18,-17],[21,-5],
+      [26,13],[13,11],[6,25],[0,16],[-12,24+ripple]], '#598da7');
+    artPoly([[-21,12],[-13,-9],[-5,-18],[5,-19],[17,-10],[16,5],[8,15],
+      [1,10],[-7,20+ripple],[-6,4]], '#9bdbdc');
+    artPoly([[-5,-10],[8,-13],[15,-6],[14,5],[9,9],[1,8],[-6,1]], '#244456');
+    artLine(3,-3,6,-4,'#eaffc7',2.3); artLine(10,-4,13,-5,'#eaffc7',2);
+    artLine(7,3,10,3,'#bdf0e8',1.3);
   }
   ctx.restore();
 }
@@ -2145,13 +2306,14 @@ function drawNpc(n) {
   ctx.save(); ctx.translate(n.x, GY); ctx.lineCap = ctx.lineJoin = 'round';
   ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.ellipse(0, 2, 26, 5, 0, 0, 7); ctx.fill();
   if (n.kind === 'keeper') {
-    ctx.strokeStyle = '#8c7fa8'; ctx.lineWidth = 5; ln(-6, -34, -8, 0); ln(6, -34, 8, 0);
-    ctx.fillStyle = '#3a2f52'; ctx.beginPath(); ctx.moveTo(-15, 0); ctx.lineTo(0, -84 + b); ctx.lineTo(15, 0); ctx.fill();
-    ctx.strokeStyle = '#3a2f52'; ctx.lineWidth = 6; ln(0, -70 + b, d * 20, -50); ln(0, -70 + b, -d * 10, -44);
-    ctx.fillStyle = 'rgba(154,255,200,.18)'; dot(d * 24, -42, 30 + Math.sin(clock * 5) * 2);
-    ctx.strokeStyle = '#6a5a48'; ctx.lineWidth = 2; ln(d * 24, -58, d * 24, -52); ctx.fillStyle = '#9affc8'; ctx.fillRect(d * 24 - 5, -52, 10, 14);
-    ctx.fillStyle = '#2a2140'; dot(0, -94 + b, 13); ctx.fillStyle = '#0b0d17'; dot(d * 3, -93 + b, 8); ctx.fillStyle = '#9affc8'; dot(d * 5, -94 + b, 1.8);
-    ctx.fillStyle = '#2a2140'; ctx.beginPath(); ctx.moveTo(-13, -90 + b); ctx.lineTo(0, -114 + b); ctx.lineTo(13, -90 + b); ctx.fill();
+    drawCostumeCloth('reaper', 0, -79 + b, -41, d, 0, c => c);
+    artPoly([[-11,-65+b],[10,-67+b],[17,-6],[5,-3],[2,-9],[-3,-3],[-18,-7]], '#42375c');
+    artPoly([[-7,-60+b],[3,-56],[9,-10],[2,-13],[-5,-8]], '#6b5683');
+    artLine(-9,-29,8,-29,'#c9a879',3);
+    drawCostumeHead('reaper', d * 2, -90 + b, d, c => c);
+    skinSegment(d * 9, -63, d * 22, -51, 6, '#5c4d73', '#b393b5');
+    ctx.fillStyle = 'rgba(154,255,200,.12)'; dot(d * 25, -40, 24 + Math.sin(clock * 5) * 2);
+    drawWeapon(WEAPONS.find(w => w.id === 'lantern'), d * 22, -57, .1, d);
   } else {
     for (let k = -1; k <= 1; k++) { ctx.fillStyle = k % 2 ? '#ffd166' : '#ff6a1a'; ctx.beginPath(); ctx.moveTo(k * 14 - 7, -6); ctx.lineTo(k * 14, -22 - Math.abs(Math.sin(clock * 9 + k)) * 10); ctx.lineTo(k * 14 + 7, -6); ctx.fill(); }
     ctx.strokeStyle = '#2a2a34'; ctx.lineWidth = 5; ln(-24, -22, -30, 0); ln(24, -22, 30, 0);
