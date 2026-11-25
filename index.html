@@ -32,22 +32,55 @@ button.tiny { font-size: .85em; padding: .25em .9em; }
 .row { display: flex; gap: .8em; flex-wrap: wrap; justify-content: center; }
 
 /* ---- main menu ---- */
-.home { flex-direction: row; flex-wrap: wrap; justify-content: space-between; justify-content: safe space-between; align-items: center; align-content: center; align-content: safe center; gap: 1em 2.5em; padding: 2em 3.5em; text-align: left;
-  background: radial-gradient(ellipse at 50% 58%, rgba(7,8,15,.05) 0%, rgba(7,8,15,.6) 55%, rgba(3,4,9,.93) 100%), linear-gradient(180deg, rgba(5,6,12,.55), rgba(5,6,12,.1) 40%, rgba(5,6,12,.7)); }
-.hl { flex: 1 1 20em; min-width: 0; }
-.kicker { letter-spacing: .32em; text-transform: uppercase; font-size: .7em; color: var(--mint); font-weight: 700; margin-bottom: .8em; }
-.home h1 { font-size: 3.7em; line-height: .9; text-shadow: .05em .05em 0 #3a1422, 0 0 .6em rgba(0,0,0,.6); }
-.home h1 span { display: block; color: var(--red); text-shadow: .05em .05em 0 #4a0b1c, 0 0 .8em rgba(255,77,109,.55); animation: flick 5s infinite; }
-@keyframes flick { 0%, 90%, 94%, 100% { opacity: 1; } 92% { opacity: .55; } 96% { opacity: .8; } }
-.tag { max-width: 24em; margin-top: 1.1em; opacity: .88; }
-.stats { display: flex; gap: .6em; margin-top: 1.2em; flex-wrap: wrap; }
-.pill { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); border-radius: 99px; padding: .3em 1em; font-size: .8em; font-weight: 700; }
-.hr { flex: 0 1 17em; display: flex; flex-direction: column; gap: .6em; }
-.hr button { width: 100%; }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .6em; }
-.hf { flex: 0 0 100%; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .4em 1em; font-size: .72em; opacity: .65; text-align: center; }
-.rot { display: none; color: var(--gold); font-size: .8em; font-weight: 700; margin-bottom: .6em; }
-@media (pointer: coarse) and (orientation: portrait) { .rot { display: block; } }
+.home {
+  display:grid; grid-template-columns:minmax(0,1fr) minmax(15em,19em);
+  grid-template-rows:1fr auto; align-items:center; justify-items:stretch;
+  gap:.8em 2em; padding:2em 2.4em 1.1em; text-align:left;
+  background:linear-gradient(90deg,#090a13 1%,rgba(9,10,19,.88) 24%,rgba(9,10,19,.08) 55%,rgba(9,10,19,.56) 100%);
+}
+.home-intro { min-width:0; padding-bottom:.45em; }
+.home-kicker { display:flex; align-items:center; gap:.7em; color:#f6c86e; font-size:.75em; font-weight:850; letter-spacing:.18em; text-transform:uppercase; }
+.home-kicker::before { content:""; width:1.8em; height:2px; background:#f6c86e; }
+.home h1 { margin:.15em 0 0; font-family:Georgia,serif; font-size:3.6em; line-height:.92; letter-spacing:-.06em; font-style:normal; text-shadow:0 3px #251814; }
+.home h1 span { display:block; color:#ffce72; }
+.home-tag { max-width:24ch; margin-top:1em; color:#ddd3c4; font-size:.97em; }
+.home-stats { display:flex; gap:1em; flex-wrap:wrap; margin-top:1em; padding-top:.75em; width:fit-content; border-top:1px solid #695434; color:#ffe5ac; font-size:.83em; font-weight:800; }
+.home-panel { display:grid; gap:.55em; width:100%; padding:.87em; background:rgba(12,12,20,.94); border:1px solid #6a5134; border-top:2px solid #d3a055; border-radius:.7em; box-shadow:0 .8em 2em #05050899; }
+.home-panel button { width:100%; min-height:2.4em; padding:.54em .5em; line-height:1.18; font-size:.9em; box-shadow:none; }
+.home-panel .home-play { min-height:2.55em; color:#28170b; background:linear-gradient(165deg,#ffdfa1,#ecae49 72%); border:1px solid #ffe0a2; font-size:1.22em; letter-spacing:.035em; }
+.home-panel .home-continue { color:#ffe6b2; border-color:#9d7747; background:#38291c; }
+.home-panel .alt:not(.home-continue) { background:#1c1b26; border-color:#484052; color:#f2e8d8; }
+.home-panel .alt:not(.home-continue):hover { background:#302b38; }
+.home-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5em; }
+.home-panel .home-dev { font-size:.74em; color:#c6bbad; min-height:2.25em; }
+.home-footer { grid-column:1 / -1; display:flex; gap:.6em 1.1em; justify-content:space-between; align-items:center; padding-top:.61em; border-top:1px solid #8b6c434e; color:#dfd0bd; font-size:.73em; }
+.home-footer button { flex:none; min-height:2.25em; background:#171523; }
+.home-controls { display:flex; flex-wrap:wrap; gap:.3em .9em; }
+.home-controls kbd { color:#ffe7b2; font:inherit; font-weight:800; }
+@media (max-aspect-ratio: 5/4) {
+  html, body[data-mode="menu"], body[data-mode="menu"] #wrap { touch-action:pan-y; }
+  body[data-mode="menu"] #wrap { width:100%; height:100%; }
+  body[data-mode="menu"] #c { height:62%; object-fit:cover; object-position:46% top; }
+  body[data-mode="menu"] .overlay { touch-action:pan-y; }
+  .home { grid-template-columns:minmax(0,28rem); grid-template-rows:auto auto auto; justify-content:center; align-content:start;
+    gap:.85rem; padding:max(1rem, env(safe-area-inset-top)) 1rem max(1rem,env(safe-area-inset-bottom)); font-size:clamp(14px,3.9vw,18px);
+    background:linear-gradient(180deg,#090a13dd 0%,#090a1344 32%,#090a13 69%); }
+  .home-intro { min-height:clamp(15rem,43dvh,24rem); display:flex; flex-direction:column; align-items:flex-start; justify-content:space-between; }
+  .home h1 { font-size:clamp(2.55em,11vw,4.4em); }
+  .home-tag { max-width:21ch; margin-top:auto; background:#090a13c9; border-radius:.3em; padding:.3em .5em; margin-left:-.35em; }
+  .home-stats { padding-top:.35em; margin-top:.4em; background:#090a13aa; }
+  .home-panel button { min-height:44px; }
+  .home-footer { flex-wrap:wrap; font-size:.8em; }
+  .home-footer button { min-height:44px; }
+  @media (pointer:coarse) { .home-controls { display:none; } }
+}
+@media (min-aspect-ratio: 6/5) and (max-height:460px) {
+  .home { padding:.75em 1.5em .5em; gap:.4em 1.4em; }
+  .home h1 { font-size:3.25em; }
+  .home-panel { gap:.37em; padding:.57em; }
+  .home-panel button { min-height:2.1em; padding:.4em; }
+  .home-footer { padding-top:.32em; }
+}
 
 /* ---- difficulty selector ---- */
 #cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(11em, 1fr)); gap: 1em; width: min(96%, 54em); }
@@ -117,26 +150,32 @@ body[data-mode]:not([data-mode="play"]) #touch { display: none !important; }
 
   <button id="talkBtn" class="off" tabindex="-1">Talk</button>
 
-  <div id="home" class="overlay home">
-    <div class="hl">
-      <div class="rot">Tip: turn your phone sideways for a bigger screen.</div>
-      <div class="kicker">100 waves &middot; one apple &middot; one Reaper</div>
-      <h1>Stickman<span>Showdown</span></h1>
-      <p class="tag">Claw through the undead, brew the cure, and claim the Haunted Scythe.</p>
-      <div class="stats"><span class="pill" id="hCoins"></span><span class="pill" id="hBest"></span></div>
+  <main id="home" class="overlay home" aria-labelledby="homeTitle">
+    <div class="home-intro">
+      <p class="home-kicker">100 waves of the undead</p>
+      <h1 id="homeTitle">Stickman<span>Showdown</span></h1>
+      <p class="home-tag">Stand against the undead, brew the cure, and claim the Haunted Scythe.</p>
+      <div class="home-stats"><span id="hCoins"></span><span id="hBest"></span></div>
     </div>
-    <div class="hr">
-      <button id="hPlay" class="big">Play</button>
-      <button id="hCont" class="alt off">Continue</button>
+    <nav class="home-panel" aria-label="Game menu">
+      <button id="hCont" class="alt home-continue off">Continue</button>
+      <button id="hPlay" class="home-play">Play</button>
       <button id="hTrain" class="alt">Training</button>
-      <button id="hDev" class="alt">Wave Test (dev)</button>
-      <div class="row2"><button id="shopBtn" class="alt">Weapons</button><button id="abBtn" class="alt">Abilities</button></div>
-    </div>
-    <div class="hf">
-      <span>A/D move &middot; W jump &middot; J attack &middot; K heavy &middot; L block &middot; Shift dash &middot; U ultimate &middot; E talk &middot; P pause</span>
-      <button id="mute" class="alt tiny">Sound: on</button>
-    </div>
-  </div>
+      <div class="home-grid">
+        <button id="shopBtn" class="alt">Weapons</button>
+        <button id="abBtn" class="alt">Abilities</button>
+      </div>
+      <button id="hDev" class="alt home-dev">Wave Test (dev)</button>
+    </nav>
+    <footer class="home-footer">
+      <div class="home-controls" aria-label="Keyboard controls">
+        <span><kbd>A/D</kbd> Move</span><span><kbd>W</kbd> Jump</span><span><kbd>J/K</kbd> Attack</span>
+        <span><kbd>L</kbd> Block</span><span><kbd>Shift</kbd> Dash</span><span><kbd>U</kbd> Ultimate</span>
+        <span><kbd>E</kbd> Talk</span><span><kbd>P</kbd> Pause</span>
+      </div>
+      <button id="mute" class="alt tiny" aria-pressed="false">Sound: on</button>
+    </footer>
+  </main>
 
   <div id="diff" class="overlay hide">
     <h2>Choose your difficulty</h2>
@@ -205,12 +244,13 @@ addEventListener('keydown', e => {
     return togglePause();
   }
   if (e.code === 'KeyP') return togglePause();
-  if (e.code === 'KeyM') { mute = !mute; return; }
+  if (e.code === 'KeyM') { mute = !mute; refreshHome(); return; }
   if (e.code === 'KeyT') { addMinion(); return; }
-  if (e.code === 'Enter' && $('shop').classList.contains('hide') && $('dev').classList.contains('hide')) {
+  if (e.code === 'Enter' && e.target?.tagName !== 'BUTTON' && $('shop').classList.contains('hide') && $('dev').classList.contains('hide')) {
     if (mode === 'over') return retry();
     if (mode === 'menu' && $('diff').classList.contains('hide')) return homePlay();
   }
+  if (mode !== 'play') return;
   const k = KEYS[e.code];
   if (k) { e.preventDefault(); if (!e.repeat) press(k); }
 });
@@ -329,7 +369,7 @@ const BEST_KEY = 'stickman-showdown-best';
 let best = 0; try { best = +localStorage.getItem(BEST_KEY) || 0; } catch (e) {}
 const CK_KEY = 'stickman-showdown-checkpoints', LD_KEY = 'stickman-showdown-lastdiff', TUT_KEY = 'stickman-showdown-tutorial';
 const cks = { easy: 0, hard: 0, impossible: 0 };
-let tutDone = false, diff = 'easy', tut = null, afterShop = null, retryFrom = 0, leaveT = 0, amb = 0;
+let tutDone = false, diff = 'easy', tut = null, afterShop = null, retryFrom = 0, leaveT = 0;
 try {
   const sv = JSON.parse(localStorage.getItem(CK_KEY) || '{}'); for (const k in cks) cks[k] = +sv[k] || 0;
   const legacy = +localStorage.getItem('stickman-showdown-checkpoint') || 0; if (legacy > cks.easy) cks.easy = legacy;
@@ -987,6 +1027,7 @@ function refreshHome() {
   $('hCoins').textContent = 'Coins: ' + coins; $('hBest').textContent = 'Best score: ' + best;
   const n = cks[diff], c = $('hCont'); c.classList.toggle('off', !(n > 0)); c.textContent = `Continue · ${DIFF[diff].name} · Wave ${n}`;
   $('mute').textContent = 'Sound: ' + (mute ? 'off' : 'on');
+  $('mute').setAttribute('aria-pressed', String(mute));
 }
 function syncUI() { document.body.dataset.mode = mode; fit(); $('ctl').classList.toggle('off', mode !== 'play'); if ($('dctl')) $('dctl').classList.toggle('off', mode !== 'play' || !devRun); resetLeave(); }
 function resetLeave() { leaveT = 0; const b = $('lbtn'); b.textContent = 'Leave'; b.classList.remove('warn'); }
@@ -1017,27 +1058,12 @@ function toHome() {
   enemies = []; allies = []; spooks = []; shots = []; parts = []; drops = []; bolts.length = 0; queue = [];
   platforms.length = pits.length = spikes.length = 0; objs = []; strikes = []; blasts = []; rage = 0; apart.length = 0; lastMi = -1; cam = lockX = 0; locked = true; cleared = false; boundL = 0; boundR = W; curZone = 0;
   combatFX.length = 0; ultimateCast = null;
-  wave = shake = freeze = ring = cyc = 0; smash = null; fury = null; bannerT = 0; amb = .4;
+  wave = shake = freeze = ring = cyc = 0; smash = null; fury = null; bannerT = 0;
   player = new Fighter(W / 2, GY, 'hero', true);
   for (const id of ['menu', 'diff', 'shop']) $(id).classList.add('hide');
   $('home').classList.remove('hide'); refreshHome();
 }
-function homeScene(dt) {
-  amb -= dt;
-  if (amb <= 0) {
-    amb = 1.3 + Math.random() * 1.3;
-    if (enemies.length < 7) {
-      const e = new Fighter(50 + Math.random() * 860, GY, ['grunt', 'grunt', 'ninja', 'brute'][(Math.random() * 4) | 0], false);
-      e.deco = true; e.life = 12 + Math.random() * 6; e.rise = e.riseMax = 1.7; e.mul = .3 + Math.random() * .2; e.dir = Math.random() < .5 ? -1 : 1; enemies.push(e);
-    }
-  }
-  for (const e of enemies) {
-    e.life -= dt;
-    if (e.x < 60) e.dir = 1; else if (e.x > W - 60) e.dir = -1;
-    e.update(dt, e.rise > 0 ? {} : { [e.dir > 0 ? 'r' : 'l']: 1 });
-  }
-  enemies = enemies.filter(e => e.life > 0);
-}
+
 function retry() { start(false, retryFrom, diff); }
 
 // ---------- interactive tutorial ----------
@@ -2178,7 +2204,7 @@ function drawWeapon(w, hx, hy, ang, d, flash = false, motion = 0, g = ctx) {
 function drawScythe(hx, hy, ang, d, len, col, fh) {
   drawWeapon({ id: 'haunted', len, c: col }, hx, hy, ang, d, fh, clock);
 }
-function drawF(f) {
+function drawF(f, displayWeapon) {
   const d = f.dir, s = f.s, st = f.state, P = f.isP, a = (st === 'punch' || st === 'kick') ? f.cur : null;
   const e = a ? Math.sin(Math.PI * Math.min(1, f.t / a.dur)) : 0, fh = f.flash > 0, C = c => fh ? '#fff' : c;
   const moving = Math.abs(f.vx) > 20 && f.gr && st === 'idle';
@@ -2198,7 +2224,7 @@ function drawF(f) {
   if (f.weak) ctx.translate(0, 22 * s);
   ctx.scale(s, s); ctx.lineCap = ctx.lineJoin = 'round'; ctx.lineWidth = 5;
   const T = color => C(f.slow > 0 && color === palette[2] ? '#b9f0ff' : color);
-  const equippedArt = P ? weapon() : null;
+  const equippedArt = P ? (displayWeapon || weapon()) : null;
   const armedAttack = a && P && !f.dive && (st === 'punch' || equippedArt.id !== 'fists');
   const swing = armedAttack ? combatPose(equippedArt, a, f.t) : null;
   const cast = P && st !== 'dead' && st !== 'hit' ? ultimateCast : null;
@@ -2420,12 +2446,77 @@ function hud() {
   }
   ctx.textAlign = 'left';
 }
+const menuSword = WEAPONS.find(w => w.id === 'katana');
+const menuMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let menuCast = null;
+function drawMenuScene() {
+  const t = menuMotion.matches ? 0 : clock;
+  ctx.save();
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#151623');
+  sky.addColorStop(.64, '#343242');
+  sky.addColorStop(1, '#16141d');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  const moonX = 510, moonY = 185;
+  const glow = ctx.createRadialGradient(moonX, moonY, 38, moonX, moonY, 225);
+  glow.addColorStop(0, '#ffd79672');
+  glow.addColorStop(.5, '#e7a45a2e');
+  glow.addColorStop(1, '#f1aa6000');
+  ctx.fillStyle = glow; ctx.fillRect(230, 0, 570, 450);
+  artDot(moonX, moonY, 98, '#d6a875');
+  artDot(moonX, moonY - 1, 93, '#f0c78d');
+  for (let i=0;i<14;i++) {
+    const a = rnd(i + 36) * Math.PI * 2, r = rnd(i+59) * 77;
+    artDot(moonX + Math.cos(a)*r, moonY + Math.sin(a)*r, 3 + rnd(i+20)*13, '#be8e6526');
+  }
+  const distantGround = [[0,360],[70,334],[137,359],[210,320],[266,341],[342,313],[417,346],
+    [491,329],[549,345],[630,313],[679,327],[725,292],[788,323],[860,305],[960,341],[960,540],[0,540]];
+  artPoly(distantGround,'#262332',null);
+  for (const [x,y] of [[113,345],[213,392],[296,361],[398,413],[607,382],[674,413],[802,368],[905,393]]) {
+    artPoly([[x-13,y],[x-13,y-33],[x-7,y-42],[x+6,y-42],[x+12,y-35],[x+13,y]], '#191924',null);
+    artLine(x-7,y-33,x+5,y-34,'#49404d',1.8);
+  }
+  for (const [x,y,d] of [[330,380,1],[654,373,-1],[857,398,1]]) {
+    artLine(x,y,x+d*12,y-125,'#171725',8);
+    artLine(x+d*8,y-64,x-d*37,y-105,'#171725',4);
+    artLine(x+d*10,y-92,x+d*46,y-129,'#171725',4);
+  }
+  ctx.fillStyle = '#141420'; ctx.fillRect(0,430,W,110);
+  artPoly([[0,464],[122,440],[238,461],[372,430],[473,451],[628,431],[790,449],[960,428],[960,540],[0,540]], '#10111b',null);
+  if (!menuCast) {
+    const portrait = (x,y,type,hero,size,dir) => {
+      const f = new Fighter(x,y,type,hero);
+      Object.assign(f, { s:size, dir, gr:true, deco:true });
+      return f;
+    };
+    menuCast = [
+      portrait(347,442,'grunt',false,1.02,1),
+      portrait(642,439,'brute',false,1.19,-1),
+      portrait(576,398,'ninja',false,.89,-1),
+      portrait(504,477,'hero',true,2.46,1),
+    ];
+  }
+  ctx.globalAlpha=.48;
+  for (const f of menuCast.slice(0,3)) drawF(f);
+  ctx.globalAlpha=1;
+  drawF(menuCast[3], menuSword);
+  for (let i=0;i<21;i++) {
+    const x=298+((rnd(i+53)*365+t*(5+i%4))%365);
+    const y=492-((rnd(i+6)*320+t*(10+i%7))%320);
+    artDot(x,y,.5+rnd(i+18)*1.7, i%3 ? '#ffc36599' : '#f38d5375');
+  }
+  ctx.restore();
+}
+
 function draw() {
+  if (mode === 'menu') { drawMenuScene(); return; }
   ctx.save();
   if (shake > 0) ctx.translate((Math.random() - .5) * shake, (Math.random() - .5) * shake);
   background(); ctx.save(); ctx.translate(-Math.round(cam), 0); world();
   if (npc) drawNpc(npc);
-  allies.forEach(drawF); enemies.forEach(drawF); if (player) drawF(player); 
+  allies.forEach(f => drawF(f)); enemies.forEach(f => drawF(f)); if (player) drawF(player);
   spooks.forEach(drawSpook);
   for (const p of parts) { ctx.globalAlpha = Math.max(0, p.l / p.m); ctx.fillStyle = p.c; ctx.fillRect(p.x, p.y, p.r, p.r); }
   ctx.globalAlpha = 1;
@@ -2477,14 +2568,13 @@ const DEV_WAVE_SELECTOR = true;
 // ---------- main loop ----------
 player = new Fighter(W / 2, GY, 'hero', true);
 refreshHome(); syncUI();
-if (!tutDone) startTutorial();
 let last = 0, lastMode = '';
 (function loop(t) {
   const dt = Math.min(.033, (t - last) / 1000 || 0); last = t;
   if (mode !== lastMode) { lastMode = mode; syncUI(); }
   if (leaveT > 0 && (leaveT -= dt) <= 0) resetLeave();
   talkUI();
-  if (mode === 'play') update(dt); else if (mode !== 'pause') { clock += dt; if (mode === 'menu') homeScene(dt); }
+  if (mode === 'play') update(dt); else if (mode !== 'pause') clock += dt;
   draw(); requestAnimationFrame(loop);
 })(0);
 })();
