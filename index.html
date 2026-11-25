@@ -203,11 +203,9 @@ body[data-mode]:not([data-mode="play"]) #touch { display: none !important; }
   <section id="dev" class="overlay hide" aria-labelledby="cheatTitle">
     <h2 id="cheatTitle">Cheat Mode</h2>
     <form id="cheatGate" class="cheat-stack">
-      <p id="cheatHelp"></p>
+      <p id="cheatHelp">Enter the cheat password to unlock these controls.</p>
       <label for="cheatPassword">Cheat password</label>
-      <input id="cheatPassword" type="password" minlength="6" maxlength="128" required>
-      <label id="cheatConfirmLabel" class="off" for="cheatConfirm">Confirm password</label>
-      <input id="cheatConfirm" class="off" type="password" minlength="6" maxlength="128" autocomplete="new-password">
+      <input id="cheatPassword" type="password" maxlength="128" autocomplete="off" required>
       <button id="cheatUnlock" class="home-play" type="submit">Unlock</button>
     </form>
     <div id="cheatControls" class="cheat-stack off">
@@ -2601,7 +2599,10 @@ function draw() {
 }
 
 // Local gate for this static game. Cheat settings and edits live in the current run.
-const CHEAT_KEY = 'stickman-showdown-cheat-lock-v1';
+const CHEAT_LOCK = Object.freeze({
+  salt: [236, 62, 86, 120, 113, 210, 198, 39, 139, 18, 158, 225, 187, 91, 124, 188],
+  digest: '0272f324fbe10e99393c7781d235fe5c56169db582ca815109aef45a7ec7e370',
+});
 let cheatUnlocked = false, cheatSnapshot = null, cheatRequest = 0;
 const cheatSettings = { god: false, ultimate: false, abilities: false };
 const cheatPanelOpen = () => !$('dev').classList.contains('hide');
@@ -2611,17 +2612,6 @@ function setCheatBackdrop(inert) {
   for (const id of ['home', 'ctl', 'dctl', 'touch', 'talkBtn']) $(id).inert = inert;
 }
 
-function readCheatLock() {
-  const stored = localStorage.getItem(CHEAT_KEY);
-  if (stored === null) return null;
-  const lock = JSON.parse(stored);
-  if (!lock || !Array.isArray(lock.salt) || lock.salt.length !== 16 ||
-      !lock.salt.every(x => Number.isInteger(x) && x >= 0 && x <= 255) ||
-      typeof lock.digest !== 'string' || !/^[0-9a-f]{64}$/.test(lock.digest)) {
-    throw new Error('Invalid local cheat lock');
-  }
-  return lock;
-}
 async function cheatDigest(password, salt) {
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: Uint8Array.from(salt),
@@ -2650,21 +2640,12 @@ function openCheatPanel() {
   $('cheatGate').classList.remove('off');
   $('cheatControls').classList.add('off');
   $('devBack').textContent = 'Back';
-  try {
-    const setup = readCheatLock() === null;
-    if (!globalThis.crypto?.subtle) throw new Error('Secure browser storage needed');
-    $('cheatHelp').textContent = setup ? 'Set a cheat password for this browser. Use at least 6 characters.' : 'Enter your cheat password to unlock these controls.';
-    $('cheatConfirmLabel').classList.toggle('off', !setup);
-    $('cheatConfirm').classList.toggle('off', !setup);
-    $('cheatConfirm').required = setup;
-    $('cheatPassword').autocomplete = setup ? 'new-password' : 'current-password';
-    $('cheatUnlock').textContent = setup ? 'Set password and unlock' : 'Unlock';
-    $('cheatUnlock').disabled = false;
-    $('cheatPassword').focus();
-  } catch {
-    $('cheatHelp').textContent = 'Cheat Mode needs working browser storage on a secure page.';
-    $('cheatUnlock').disabled = true;
-  }
+  const available = !!globalThis.crypto?.subtle;
+  $('cheatHelp').textContent = available
+    ? 'Enter the cheat password to unlock these controls.'
+    : 'Cheat Mode needs a secure browser page.';
+  $('cheatUnlock').disabled = !available;
+  (available ? $('cheatPassword') : $('devBack')).focus();
 }
 function clearCheatInputs() {
   Object.keys(held).forEach(release);
@@ -2672,7 +2653,7 @@ function clearCheatInputs() {
 }
 function closeCheatPanel() {
   cheatRequest++;
-  $('cheatPassword').value = $('cheatConfirm').value = '';
+  $('cheatPassword').value = '';
   $('dev').classList.add('hide');
   setCheatBackdrop(false);
   clearCheatInputs();
@@ -2756,27 +2737,19 @@ $('cheatGate').onsubmit = async event => {
   event.preventDefault();
   if (!cheatPanelOpen() || cheatUnlocked || $('cheatUnlock').disabled) return;
   const password = $('cheatPassword').value;
-  const confirmation = $('cheatConfirm').value;
-  if (password.length < 6 || password.length > 128) { cheatStatus('Use 6–128 characters.'); return; }
+  if (!password || password.length > 128) { cheatStatus('Incorrect password.'); return; }
   const token = ++cheatRequest;
   $('cheatUnlock').disabled = true;
   cheatStatus('');
   try {
-    const lock = readCheatLock();
-    if (!lock && password !== confirmation) { cheatStatus('The passwords do not match.'); return; }
-    const salt = lock ? lock.salt : Array.from(crypto.getRandomValues(new Uint8Array(16)));
-    const digest = await cheatDigest(password, salt);
+    const digest = await cheatDigest(password, CHEAT_LOCK.salt);
     if (token !== cheatRequest || !cheatPanelOpen()) return;
-    if (lock && lock.digest !== digest) { cheatStatus('Incorrect password.'); $('cheatPassword').select(); return; }
-    if (!lock) {
-      if (readCheatLock() !== null) { cheatStatus('A password was set in another tab. Reopen Cheat Mode.'); return; }
-      localStorage.setItem(CHEAT_KEY, JSON.stringify({ salt, digest }));
-    }
+    if (digest !== CHEAT_LOCK.digest) { cheatStatus('Incorrect password.'); $('cheatPassword').select(); return; }
     cheatUnlocked = true;
-    $('cheatPassword').value = $('cheatConfirm').value = '';
+    $('cheatPassword').value = '';
     showCheatControls();
   } catch {
-    if (token === cheatRequest) cheatStatus('Could not verify or save the local password.');
+    if (token === cheatRequest) cheatStatus('Could not verify the cheat password.');
   } finally {
     if (token === cheatRequest) $('cheatUnlock').disabled = false;
   }
