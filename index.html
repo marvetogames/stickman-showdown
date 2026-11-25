@@ -75,6 +75,7 @@ button.tiny { font-size: .85em; padding: .25em .9em; }
 #items { display: grid; grid-template-columns: repeat(auto-fit, minmax(14em, 1fr)); gap: .5em; width: min(96%, 52em); }
 .item { background: rgba(255,255,255,.08); border-radius: .5em; padding: .5em .7em; text-align: left; font-size: .8em; line-height: 1.4; }
 .item button { padding: .25em 1.1em; font-size: .95em; margin-top: .3em; box-shadow: none; }
+.weapon-preview { display: block; width: 100%; height: auto; aspect-ratio: 8 / 3; margin-bottom: .5em; border-radius: .4em; background: radial-gradient(ellipse at center, #242b3c, #0b0d17); }
 
 /* ---- in-game pause / leave (top centre, far from the touch controls) ---- */
 #ctl { position: absolute; top: .4em; left: 50%; transform: translateX(-50%); display: flex; gap: 1.4em; z-index: 3; font-size: clamp(11px, calc(var(--u, 1) * 15px), 20px); }
@@ -246,8 +247,17 @@ function renderShop() {
     const own = kind === 'w' ? owned.includes(w.id) : has(w.id), cost = w.cost || 0, lock = !!w.locked && !own;
     const on = kind === 'w' ? equipped === w.id : own;
     const label = on ? (kind === 'a' ? 'Owned' : 'Equipped') : own ? 'Equip' : lock ? 'Heal the Reaper at wave 50' : coins >= cost ? 'Buy' : 'Need ' + (cost - coins) + ' more';
-    return `<div class="item"><b style="color:${w.c || '#fff'}">${w.name}</b>${cost && !w.locked ? ' &middot; ' + cost + ' coins' : ''}<br>${w.desc}<br><button data-i="${i}" ${lock ? 'disabled' : ''}>${label}</button></div>`;
+    return `<div class="item">${kind === 'w' ? `<canvas class="weapon-preview" width="480" height="180" data-weapon="${w.id}" role="img" aria-label="${w.name}"></canvas>` : ''}<b style="color:${w.c || '#fff'}">${w.name}</b>${cost && !w.locked ? ' &middot; ' + cost + ' coins' : ''}<br>${w.desc}<br><button data-i="${i}" ${lock ? 'disabled' : ''}>${label}</button></div>`;
   }).join('');
+  document.querySelectorAll('.weapon-preview').forEach(canvas => {
+    const w = WEAPONS.find(w => w.id === canvas.dataset.weapon), g = canvas.getContext('2d');
+    g.save(); g.translate(240, w.id === 'lantern' ? 50 : 98); g.scale(3, 3);
+    if (['daggers', 'thunder', 'fists'].includes(w.id)) {
+      drawWeapon(w, -18, 12, -.35, 1, false, 0, g);
+      drawWeapon(w, 12, -10, -.35, 1, false, 0, g);
+    } else drawWeapon(w, -w.len * .37, 6, -.15, 1, false, 0, g);
+    g.restore();
+  });
 }
 $('items').addEventListener('click', e => {
   const i = e.target.dataset && e.target.dataset.i; if (i == null) return;
@@ -1482,13 +1492,162 @@ function limb(x, y, ang, d, l = 21) {
 // zombie palette per type: [shirt rags, glowing eyes, trousers]
 const ZC = { grunt: ['#4a3f58', '#d6ff4a', '#35404a'], ninja: ['#2c3a52', '#7fe7ff', '#202a3a'], brute: ['#5a3a2e', '#ff5a3a', '#3a2a20'], boss: ['#3a2a2a', '#ffcf3a', '#2a2020'] };
 const dot = (x, y, r) => { ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); };
-// a curved scythe: shaft from the hand, glowing crescent blade at the tip
+// Weapon art uses a hand-local axis: x runs from grip to tip, y across the blade.
+// Shared by fighters, shop previews and thrown daggers; all combat values stay in WEAPONS.
+function drawWeapon(w, hx, hy, ang, d, flash = false, motion = 0, g = ctx) {
+  g.save(); g.translate(hx, hy); g.scale(d, 1); g.rotate(ang);
+  g.lineCap = 'round'; g.lineJoin = 'round'; g.shadowBlur = 0;
+  const L = w.len, edge = '#11151e', brass = '#bc9250', pale = '#f7e6b0';
+  const color = c => flash ? '#fff' : c;
+  const metal = (a = -8, b = 8, dark = '#47566b', light = '#eef5ff') => {
+    const v = g.createLinearGradient(0, a, 0, b);
+    v.addColorStop(0, color(dark)); v.addColorStop(.34, color('#9daec1'));
+    v.addColorStop(.48, color(light)); v.addColorStop(.57, color('#899bb1')); v.addColorStop(1, color(dark)); return v;
+  };
+  const line = (x, y, xx, yy, c, width = 1) => {
+    g.strokeStyle = color(c); g.lineWidth = width; g.beginPath(); g.moveTo(x, y); g.lineTo(xx, yy); g.stroke();
+  };
+  const shape = (points, fill, stroke = edge, width = 1.2) => {
+    g.beginPath(); points.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y));
+    g.closePath(); g.fillStyle = typeof fill === 'string' ? color(fill) : fill; g.fill();
+    if (stroke) { g.strokeStyle = color(stroke); g.lineWidth = width; g.stroke(); }
+  };
+  const circle = (x, y, r, c) => { g.fillStyle = color(c); g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); };
+  const band = (x, half = 4, c = brass) => shape([[x - 1.5, -half], [x + 1.5, -half], [x + 1.5, half], [x - 1.5, half]], c, edge, .6);
+  const shaft = (a, b, bone = false) => {
+    shape([[a, -2.8], [b, -2.5], [b, 2.5], [a, 2.8]], bone ? '#c9b995' : '#63412c');
+    line(a + 1, -1.2, b - 1, -1.2, bone ? '#f3e8cc' : '#b48350', 1);
+    line(a + 4, 1.4, b - 4, 1.4, bone ? '#89765b' : '#35271f', .7);
+  };
+  const grip = (a = -10, b = 7, c = '#392a35') => {
+    shape([[a, -3.5], [b, -3.5], [b, 3.5], [a, 3.5]], c);
+    for (let x = a + 2; x < b - 1; x += 3.5) line(x, -2.5, x + 2, 2.5, '#9b7e72', .85);
+    band(a); band(b);
+  };
+  const glow = (points, c, width = 1.4) => {
+    g.save(); g.shadowColor = c; g.shadowBlur = 5; g.strokeStyle = color(c); g.lineWidth = width;
+    g.beginPath(); points.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.stroke(); g.restore();
+  };
+  switch (w.id) {
+    case 'haunted': case 'scythe': {
+      shaft(-16, L); grip(-8, 9); band(L - 6, 4); band(-15, 3);
+      // Forged socket and a tapered, inward-curving steel crescent.
+      shape([[L - 5, -7], [L + 3, -7], [L + 4, 7], [L - 5, 7]], metal());
+      g.beginPath(); g.moveTo(L - 3, -5); g.bezierCurveTo(L + 19, -12, L + 28, 10, L + 10, 36);
+      g.bezierCurveTo(L + 13, 19, L + 11, 8, L - 4, 5); g.closePath();
+      g.fillStyle = metal(-10, 32); g.fill(); g.strokeStyle = color(edge); g.lineWidth = 1.3; g.stroke();
+      g.beginPath(); g.moveTo(L + 1, -3); g.bezierCurveTo(L + 18, -5, L + 23, 12, L + 10, 36);
+      g.strokeStyle = color('#f3fbff'); g.lineWidth = 1.2; g.stroke();
+      glow([[L - 1, 3], [L + 8, 5], [L + 14, 12], [L + 15, 20]], w.c, 1);
+      circle(L - 1, 0, 2, brass); break;
+    }
+    case 'katana': {
+      grip(-14, 3, '#302533'); band(5, 7, '#9d7746');
+      g.beginPath(); g.moveTo(7, -3); g.quadraticCurveTo(27, -3, L + 3, -10);
+      g.lineTo(L - 1, -3); g.quadraticCurveTo(26, 4, 7, 3); g.closePath();
+      g.fillStyle = metal(-9, 4); g.fill(); g.strokeStyle = color(edge); g.lineWidth = 1.1; g.stroke();
+      g.beginPath(); g.moveTo(8, 2); g.quadraticCurveTo(28, 2, L + 3, -10); g.strokeStyle = color('#f6fcff'); g.lineWidth = 1; g.stroke();
+      line(10, -1, 28, -2, '#6a7b93', .7); circle(-11, 0, 1.2, pale); break;
+    }
+    case 'frost': {
+      grip(-13, 5, '#213e54');
+      shape([[4, -3], [9, -10], [12, -9], [10, -3], [10, 3], [12, 9], [9, 10], [4, 3]], metal(-10, 10));
+      shape([[10, -4], [L - 12, -7], [L, 0], [L - 12, 7], [10, 4]], metal(-7, 7, '#345d7e', '#e3faff'));
+      shape([[12, 0], [L - 2, 0], [L - 13, 5]], '#84cde3', null);
+      line(11, -3.3, L - 12, -6, '#f4fdff', 1); glow([[16, 0], [22, -2], [26, 1], [32, -1], [L - 8, 0]], w.c, 1);
+      circle(-14, 0, 3.5, '#7fe3ff'); break;
+    }
+    case 'flame': {
+      shaft(-18, L - 19); grip(-8, 10); band(-17, 3.5); band(L - 23, 4);
+      shape([[L - 24, -4], [L - 16, -4], [L - 7, -7], [L + 1, 0], [L - 7, 7], [L - 16, 4], [L - 24, 4]], metal(-7, 7, '#674b46', '#ffdfbb'));
+      line(L - 20, 0, L - 1, 0, '#fff1d6', 1.3);
+      glow([[L - 22, 2], [L - 16, 1], [L - 11, 3], [L - 4, 1]], '#ff8b44', 1.2); break;
+    }
+    case 'cleaver': {
+      grip(-10, 7, '#4c302a'); circle(-6, 0, 1, brass); circle(3, 0, 1, brass); band(9, 5);
+      shape([[10, -5], [L - 2, -7], [L + 1, -4], [L + 1, 9], [L - 4, 12], [11, 10]], metal(-7, 12));
+      shape([[12, 7], [L, 6], [L, 9], [L - 4, 11], [12, 9]], '#e8f3ff', null);
+      circle(L - 5, -2, 1.8, '#172331'); circle(L - 5, -2.5, .6, '#8695a9');
+      line(18, -2, 22, 3, '#7e8a99', .65); line(27, -3, 30, 2, '#7e8a99', .65); break;
+    }
+    case 'daggers': {
+      grip(-9, 2, '#343346'); band(3, 5.5, '#9daec1');
+      shape([[5, -3], [L - 4, -4], [L + 5, 0], [L - 4, 4], [5, 3]], metal(-4, 4));
+      shape([[5, 0], [L + 5, 0], [L - 4, 3]], '#687d98', null);
+      line(6, -2.4, L + 3, -.3, '#f4f7ff', .8); circle(-10, 0, 2.5, brass); break;
+    }
+    case 'hammer': {
+      shaft(-13, L - 1); grip(-9, 9); band(L - 10, 4);
+      shape([[L - 8, -15], [L + 7, -15], [L + 10, -11], [L + 10, 12], [L + 6, 16], [L - 8, 16], [L - 11, 12], [L - 11, -11]], metal(-15, 16, '#4b5057', '#c4cbd0'));
+      shape([[L + 7, -12], [L + 10, -10], [L + 10, 11], [L + 7, 14]], '#3e4a58');
+      line(L - 8, -12, L + 5, -12, '#e5e9ee', 1.2); band(L - 1, 15, '#8e7952');
+      line(L - 6, -7, L - 3, -3, '#41464f', .9); line(L - 3, -3, L - 5, 3, '#41464f', .9); break;
+    }
+    case 'shovel': {
+      shaft(-10, L - 17); band(L - 19, 4, '#8090a1');
+      // Open D handle, wooden haft, socket and a dished spade.
+      g.beginPath(); g.moveTo(-9, -3); g.lineTo(-15, -8); g.lineTo(-22, -7); g.lineTo(-22, 7); g.lineTo(-15, 8); g.lineTo(-9, 3);
+      g.strokeStyle = color(edge); g.lineWidth = 5; g.stroke(); g.strokeStyle = color('#9b7046'); g.lineWidth = 2.7; g.stroke();
+      shape([[L - 18, -3], [L - 14, -9], [L - 3, -9], [L + 3, 0], [L - 3, 9], [L - 14, 9], [L - 18, 3]], metal(-9, 9, '#434c57', '#b5c1cc'));
+      line(L - 16, 0, L - 1, 0, '#d7e0e8', 1.1); line(L - 4, -7, L + 1, 0, '#edf3f7', .8); line(L + 1, 0, L - 4, 7, '#edf3f7', .8); break;
+    }
+    case 'staff': {
+      shaft(-22, L, true); grip(-7, 10, '#4c3630');
+      for (const x of [-20, 18, L - 3]) band(x, 3.7, brass);
+      circle(L, -1, 4, '#d7c6a5'); circle(L, 1, 3.5, '#d7c6a5');
+      line(24, .5, 34, -.8, '#8d7a59', .75); line(34, -.8, 39, 1.3, '#8d7a59', .75); break;
+    }
+    case 'nunchucks': {
+      shaft(-8, 11, true); grip(-6, 8, '#725140');
+      const bend = .65 + Math.sin(motion * 5) * .35;
+      for (let i = 0; i < 4; i++) {
+        g.beginPath(); g.ellipse(13 + i * 3.5, Math.sin(i / 3 * Math.PI) * bend * 3, 2.7, 1.8, i % 2 * .8, 0, Math.PI * 2);
+        g.strokeStyle = color('#131b26'); g.lineWidth = 2.3; g.stroke(); g.strokeStyle = color('#d1dae5'); g.lineWidth = 1; g.stroke();
+      }
+      g.save(); g.translate(26, 0); g.rotate(bend); shaft(0, 21, true); band(1, 3.4); band(19, 3.5); line(5, -1, 16, -1, '#fff2cf', .9); g.restore(); break;
+    }
+    case 'chain': {
+      grip(-10, 3, '#2d3544'); band(5, 4, '#b3bdcc');
+      for (let i = 0; i < 10; i++) {
+        const x = 9 + i * 4.1, y = Math.sin(i / 10 * Math.PI) * (3 + Math.sin(motion * 4) * 3);
+        g.beginPath(); g.ellipse(x, y, 3.4, i % 2 ? 1.4 : 2.4, i % 2 ? -.3 : .3, 0, Math.PI * 2);
+        g.strokeStyle = color(edge); g.lineWidth = 3; g.stroke(); g.strokeStyle = color('#a9b6c9'); g.lineWidth = 1.4; g.stroke();
+      }
+      circle(L - 7, 0, 6.5, '#68788c'); circle(L - 8, -2, 2, '#cad5df');
+      for (let i = 0; i < 6; i++) { const a = i * Math.PI / 3; shape([[L - 7 + Math.cos(a - .25) * 5, Math.sin(a - .25) * 5], [L - 7 + Math.cos(a) * 10, Math.sin(a) * 10], [L - 7 + Math.cos(a + .25) * 5, Math.sin(a + .25) * 5]], '#9ba9bd', edge, .7); }
+      break;
+    }
+    case 'lantern': {
+      grip(-6, 6, '#343b37');
+      g.save(); g.translate(5, 0); g.rotate(-ang + Math.sin(motion * 4) * .12);
+      // The bail hangs from the fist; glass and flame sit inside an iron cage.
+      g.beginPath(); g.arc(0, 7, 6, Math.PI, 0); g.strokeStyle = color('#b49c64'); g.lineWidth = 2; g.stroke();
+      shape([[-8, 10], [8, 10], [10, 15], [-10, 15]], metal(10, 15, '#425348', '#d7e2bf'));
+      shape([[-8, 15], [8, 15], [7, 31], [-7, 31]], '#183c35');
+      glow([[-4, 19], [-5, 27], [0, 30], [5, 27], [4, 19]], w.c, 2.5);
+      g.beginPath(); g.moveTo(0, 29); g.bezierCurveTo(-7, 24, 4, 21, 0, 17); g.bezierCurveTo(9, 23, 5, 29, 0, 29); g.fillStyle = color('#caffdc'); g.fill();
+      for (const x of [-8, 0, 8]) line(x, 15, x * .85, 31, '#9ea77d', 1.3);
+      shape([[-9, 31], [9, 31], [10, 34], [-10, 34]], metal(30, 35));
+      line(-5, 17, -5, 23, '#d6fff1', .8); g.restore(); break;
+    }
+    case 'thunder': {
+      shape([[-15, -5], [-9, -7], [0, -7], [5, -5], [11, -4], [13, 0], [10, 6], [-7, 6], [-14, 4]], metal(-7, 7, '#4c4c5a', '#eee4bd'));
+      band(-12, 5, '#aa8242');
+      for (let i = 0; i < 4; i++) shape([[4 + i * 2.1, -5], [6 + i * 2.1, -4], [6 + i * 2.1, 3], [4 + i * 2.1, 4]], '#a5b2c2', edge, .5);
+      shape([[-7, -5], [1, -6], [5, 0], [0, 5], [-7, 4]], '#605c55', '#cba960', .7);
+      glow([[-5, -2], [0, -3], [-2, 0], [3, 0], [-1, 3]], w.c, 1.3); break;
+    }
+    case 'fists': {
+      shape([[-9, -4], [-4, -6], [4, -5], [8, -2], [8, 3], [3, 6], [-7, 5]], '#5d8279');
+      for (let x = -6; x < 5; x += 3) line(x, -4, x + 2, 4, '#c9e5d9', 1.8);
+      shape([[2, -4], [7, -2], [8, 1], [5, 3], [1, 1]], '#d6eee2', '#5d8279', .7);
+      glow([[-6, -3], [-2, -2], [1, -3]], w.c, .8); break;
+    }
+  }
+  g.restore();
+}
 function drawScythe(hx, hy, ang, d, len, col, fh) {
-  const ex = hx + Math.cos(ang) * len * d, ey = hy + Math.sin(ang) * len, bx = hx - Math.cos(ang) * 14 * d, by = hy - Math.sin(ang) * 14;
-  ctx.strokeStyle = fh ? '#fff' : '#5a4634'; ctx.lineWidth = 4; ln(bx, by, ex, ey);
-  ctx.save(); ctx.shadowColor = col; ctx.shadowBlur = 12; ctx.fillStyle = fh ? '#fff' : col;
-  ctx.beginPath(); ctx.moveTo(ex - d * 2, ey + 3); ctx.quadraticCurveTo(ex + d * 6, ey - 30, ex + d * 42, ey + 8);
-  ctx.quadraticCurveTo(ex + d * 18, ey - 12, ex + d * 2, ey + 7); ctx.closePath(); ctx.fill(); ctx.restore();
+  drawWeapon({ id: 'haunted', len, c: col }, hx, hy, ang, d, fh, clock);
 }
 function drawF(f) {
   const d = f.dir, s = f.s, st = f.state, P = f.isP, a = (st === 'punch' || st === 'kick') ? f.cur : null;
@@ -1532,7 +1691,11 @@ function drawF(f) {
     ctx.fillStyle = C('#8f1226'); ctx.beginPath(); ctx.moveTo(nx - d * 2, ny + 1); ctx.lineTo(nx - d * tail * .6, ny + 6 + t); ctx.lineTo(nx - d * tail, hip + 28 + t); ctx.lineTo(nx - d * 6, hip + 14); ctx.fill();
   }
   ctx.globalAlpha = .75; ctx.strokeStyle = P ? C('#6c7590') : skin; ctx.lineWidth = 5;
-  const bL = limb(0, hip, bl, d), bA = limb(nx, sy, ba, d, 17); P ? (legP(bL), armP(bA)) : (legZ(bL), armZ(bA)); ctx.globalAlpha = 1;
+  const bL = limb(0, hip, bl, d), bA = limb(nx, sy, ba, d, 17); P ? (legP(bL), armP(bA)) : (legZ(bL), armZ(bA));
+  if (P && ['daggers', 'thunder', 'fists'].includes(weapon().id)) {
+    drawWeapon(weapon(), bA[2], bA[3], ba[1], d, fh, clock + .4);
+  }
+  ctx.globalAlpha = 1;
   // torso
   ctx.lineWidth = 5; ctx.strokeStyle = skin; ln(0, hip, nx, ny);
   if (P) {
@@ -1551,17 +1714,10 @@ function drawF(f) {
   const fL = limb(0, hip, fl, d), fA = limb(nx, sy, fa, d, 17); P ? (legP(fL), armP(fA)) : (legZ(fL), armZ(fA));
   if (P) {
     const w = weapon();
-    if (w.id === 'haunted') { drawScythe(fA[2], fA[3], Math.min(.9, fa[1] - .35), d, w.len, w.c, fh); ctx.fillStyle = C('#cfd6e8'); dot(fA[2], fA[3], 5.5); }
-    else {
-      ctx.save(); ctx.shadowColor = w.c; ctx.shadowBlur = 12;
-      if (w.len) {
-        const ex = fA[2] + Math.cos(fa[1]) * w.len * d, ey = fA[3] + Math.sin(fa[1]) * w.len;
-        ctx.strokeStyle = C(w.c); ctx.lineWidth = 4; ln(fA[2], fA[3], ex, ey);
-        ctx.fillStyle = C('#e8e0c8'); dot(ex, ey, 4.5); ctx.fillStyle = '#0b0d17'; dot(ex - 1.6, ey - .6, 1.1); dot(ex + 1.6, ey - .6, 1.1);
-        ctx.fillStyle = C(w.c); ctx.globalAlpha = .6; dot(ex + Math.sin(clock * 9) * 3, ey - 7 - Math.abs(Math.sin(clock * 7)) * 4, 2.5);
-      } else { ctx.fillStyle = C(w.c); ctx.globalAlpha = .55; dot(fA[2], fA[3], 8 + Math.sin(clock * 10) * 1.5); }
-      ctx.restore(); ctx.fillStyle = C('#cfd6e8'); dot(fA[2], fA[3], 5.5);
-    }
+    const wa = (w.id === 'haunted' || w.id === 'scythe') ? Math.min(.9, fa[1] - .35) : fa[1];
+    drawWeapon(w, fA[2], fA[3], wa, d, fh, clock);
+    // Fingers cross the grip; gauntlets and wraps already include their own hand shape.
+    if (!['thunder', 'fists'].includes(w.id)) { ctx.fillStyle = C('#cfd6e8'); dot(fA[2], fA[3], 3.6); }
     ctx.fillStyle = C('#b9c3da'); dot(nx, sy, 8.5); ctx.strokeStyle = C('#e0b85a'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(nx, sy, 8.5, 0, 7); ctx.stroke();
     const hx = nx + d * 2, hy = ny - 12;
     ctx.fillStyle = C('#b9c3da'); dot(hx, hy, 12);
@@ -1724,7 +1880,7 @@ function draw() {
   for (const c of drops) { ctx.fillStyle = '#ffd166'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(c.x, c.y, 6, 0, 7); ctx.fill(); ctx.stroke(); }
   for (const s of shots) {
     ctx.strokeStyle = ctx.fillStyle = s.c;
-    if (s.big) { ctx.globalAlpha = .75; ctx.beginPath(); ctx.arc(s.x, s.y, 34, 0, 7); ctx.fill(); ctx.globalAlpha = 1; } else { ctx.lineWidth = 4; ln(s.x, s.y, s.x - Math.sign(s.vx) * 22, s.y); }
+    if (s.big) { ctx.globalAlpha = .75; ctx.beginPath(); ctx.arc(s.x, s.y, 34, 0, 7); ctx.fill(); ctx.globalAlpha = 1; } else drawWeapon({ id: 'daggers', len: 16, c: s.c }, s.x - Math.sign(s.vx) * 20, s.y, 0, Math.sign(s.vx), false, clock);
   }
   if (smash) { ctx.strokeStyle = 'rgba(255,77,109,.85)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(smash.x, GY + 2, 150, 26, 0, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.ellipse(smash.x, GY + 2, 150 * (1 - smash.t / .55), 26 * (1 - smash.t / .55), 0, 0, 7); ctx.stroke(); }
   ctx.strokeStyle = '#ffe066'; ctx.lineWidth = 3;
