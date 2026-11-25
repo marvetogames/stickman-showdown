@@ -69,7 +69,7 @@ button.tiny { font-size: .85em; padding: .25em .9em; }
   .home h1 { font-size:clamp(2.55em,11vw,4.4em); }
   .home-tag { max-width:21ch; margin-top:auto; background:#090a13c9; border-radius:.3em; padding:.3em .5em; margin-left:-.35em; }
   .home-stats { padding-top:.35em; margin-top:.4em; background:#090a13aa; }
-  .home-panel button { min-height:44px; }
+  .home-panel button, .home-panel .home-dev { min-height:44px; }
   .home-footer { flex-wrap:wrap; font-size:.8em; }
   .home-footer button { min-height:44px; }
   @media (pointer:coarse) { .home-controls { display:none; } }
@@ -93,10 +93,27 @@ button.tiny { font-size: .85em; padding: .25em .9em; }
 .card .lnk { background: none; box-shadow: none; border: 1px solid var(--c); color: var(--c); font-size: .8em; padding: .4em; }
 
 #shop, #diff, #dev { background: rgba(5,6,12,.98); }
-#dev input { width: 4.5em; font: inherit; font-size: 1.4em; text-align: center; padding: .25em; border-radius: .4em; border: 1px solid rgba(255,255,255,.3); background: #111; color: #fff; user-select: text; -webkit-user-select: text; }
-#dctl { position: absolute; top: .4em; left: .5em; display: flex; gap: .4em; align-items: center; z-index: 3; font-size: clamp(10px, calc(var(--u, 1) * 13px), 17px); }
-#dctl.off { display: none; }
-#dctl .devl { color: #ffd166; font-weight: 900; letter-spacing: .1em; }
+#dev { z-index:8; color:#f5ebdb; }
+.cheat-stack { width:min(100%,39em); display:grid; gap:.6em; text-align:left; }
+.cheat-stack p { color:#ded1c4; }
+#cheatGate { width:min(100%,28em); }
+#dev input:not([type="checkbox"]), #dev select { width:100%; padding:.45em .62em; font:inherit; color:#fff4db; background:#1e1b28; border:1px solid #74644f; border-radius:.4em; user-select:text; }
+#dev button { min-height:2.35em; }
+#dev button[type="submit"], #devGo { background:#f4c676; color:#271809; box-shadow:none; }
+.cheat-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.48em; }
+.cheat-grid label { display:grid; gap:.25em; min-width:0; }
+.cheat-toggles { display:flex; flex-wrap:wrap; gap:.35em 1em; }
+.cheat-toggles label { display:flex; min-height:2em; align-items:center; gap:.3em; }
+#dctl { position:absolute; top:5.9em; left:1.1em; display:flex; gap:.5em; align-items:center; z-index:3; font-size:clamp(10px,calc(var(--u,1) * 13px),17px); }
+#cheatOpen { min-height:2.4em; }
+#dctl .devl { color:#ffd166; font-weight:900; letter-spacing:.05em; }
+@media (max-aspect-ratio:5/4) {
+  body:has(#dev:not(.hide)) { touch-action:pan-y; }
+  body:has(#dev:not(.hide)) #wrap { top:50%; width:100%; height:100%; touch-action:pan-y; }
+  #dev { touch-action:pan-y; font-size:clamp(14px,3.7vw,18px); }
+  #dev button { min-height:44px; }
+}
+
 /* ---- pause / results ---- */
 #menu h1 { font-size: 3.2em; }
 
@@ -165,7 +182,7 @@ body[data-mode]:not([data-mode="play"]) #touch { display: none !important; }
         <button id="shopBtn" class="alt">Weapons</button>
         <button id="abBtn" class="alt">Abilities</button>
       </div>
-      <button id="hDev" class="alt home-dev">Wave Test (dev)</button>
+      <button id="hDev" class="alt home-dev">Cheat Mode</button>
     </nav>
     <footer class="home-footer">
       <div class="home-controls" aria-label="Keyboard controls">
@@ -183,17 +200,43 @@ body[data-mode]:not([data-mode="play"]) #touch { display: none !important; }
     <button id="diffBack" class="alt">Back</button>
   </div>
 
-  <div id="dev" class="overlay hide">
-    <h2>Wave Test</h2>
-    <p class="note">Temporary developer tool. Checkpoints are not saved in test runs.</p>
-    <div class="row"><button id="dm10" class="alt">-10</button><button id="dm1" class="alt">-1</button><input id="devWave" type="number" min="1" max="100" value="1"><button id="dp1" class="alt">+1</button><button id="dp10" class="alt">+10</button></div>
-    <div id="devChips" class="row" style="flex-wrap:wrap;justify-content:center"></div>
-    <div id="devDiff" class="row"></div>
-    <p id="devInfo"></p>
-    <div class="row"><button id="devGo">Start at this wave</button><button id="devBack" class="alt">Back</button></div>
-  </div>
+  <section id="dev" class="overlay hide" aria-labelledby="cheatTitle">
+    <h2 id="cheatTitle">Cheat Mode</h2>
+    <form id="cheatGate" class="cheat-stack">
+      <p id="cheatHelp"></p>
+      <label for="cheatPassword">Cheat password</label>
+      <input id="cheatPassword" type="password" minlength="6" maxlength="128" required>
+      <label id="cheatConfirmLabel" class="off" for="cheatConfirm">Confirm password</label>
+      <input id="cheatConfirm" class="off" type="password" minlength="6" maxlength="128" autocomplete="new-password">
+      <button id="cheatUnlock" class="home-play" type="submit">Unlock</button>
+    </form>
+    <div id="cheatControls" class="cheat-stack off">
+      <p>Changes in Cheat Mode do not count toward normal progress.</p>
+      <div class="cheat-grid">
+        <label>Wave <input id="devWave" type="number" min="1" max="100" value="1"></label>
+        <div><label for="cheatDiff">Difficulty</label><select id="cheatDiff"><option value="easy">Easy</option><option value="hard">Hard</option><option value="impossible">Impossible</option></select></div>
+        <div><label for="cheatWeapon">Weapon</label><select id="cheatWeapon"></select></div>
+        <div><label for="cheatEnemy">Enemy</label><select id="cheatEnemy"><option value="grunt">Shambler</option><option value="ninja">Ghoul</option><option value="brute">Brute</option><option value="boss">Scythe Reaper</option></select></div>
+      </div>
+      <div class="cheat-toggles">
+        <label><input type="checkbox" id="cheatGod"> Invincible</label>
+        <label><input type="checkbox" id="cheatUlt"> Unlimited ultimate</label>
+        <label><input type="checkbox" id="cheatAbilities"> All abilities</label>
+      </div>
+      <button id="devGo" type="button">Start cheat run</button>
+      <div id="cheatActions" class="cheat-grid off">
+        <button id="cheatSpawn" class="alt" type="button">Spawn enemy</button>
+        <button id="cheatClear" class="alt" type="button">Clear enemies</button>
+        <button id="cheatHeal" class="alt" type="button">Full health</button>
+        <button id="cheatCharge" class="alt" type="button">Charge ultimate</button>
+        <button id="cheatCoins" class="alt" type="button">Add 1,000 coins</button>
+      </div>
+    </div>
+    <p id="cheatStatus" class="note" role="status"></p>
+    <button id="devBack" class="alt" type="button">Back</button>
+  </section>
 
-  <div id="dctl" class="off"><button id="dPrev" class="alt tiny" tabindex="-1">&lt; Wave</button><span class="devl">TEST</span><button id="dNext" class="alt tiny" tabindex="-1">Wave &gt;</button><button id="dNext10" class="alt tiny" tabindex="-1">+10</button></div>
+  <div id="dctl" class="off"><button id="cheatOpen" class="alt tiny" type="button">Cheats</button><span class="devl">CHEAT RUN</span></div>
 
   <div id="menu" class="overlay hide">
     <h1 id="title">Paused</h1>
@@ -236,9 +279,12 @@ const want = k => time - (buf[k] ?? -9) < .18;
 const eat = k => { buf[k] = -9; };
 
 addEventListener('keydown', e => {
+  if (cheatPanelOpen()) {
+    if (e.code === 'Escape') { e.preventDefault(); closeCheatPanel(); }
+    return;
+  }
   if (e.target && e.target.tagName === 'INPUT') return;
   if (e.code === 'Escape') {
-    if (!$('dev').classList.contains('hide')) return $('dev').classList.add('hide');
     if (!$('shop').classList.contains('hide')) return closeShop();
     if (!$('diff').classList.contains('hide')) return $('diff').classList.add('hide');
     return togglePause();
@@ -255,7 +301,7 @@ addEventListener('keydown', e => {
   if (k) { e.preventDefault(); if (!e.repeat) press(k); }
 });
 addEventListener('keyup', e => { const k = KEYS[e.code]; if (k) release(k); });
-addEventListener('blur', () => { Object.keys(held).forEach(release); if (mode === 'play') togglePause(); });
+addEventListener('blur', () => { Object.keys(held).forEach(release); if (mode === 'play' && !cheatPanelOpen()) togglePause(); });
 document.querySelectorAll('[data-k]').forEach(b => {
   const k = b.dataset.k;
   b.addEventListener('pointerdown', e => { e.preventDefault(); press(k); });
@@ -417,7 +463,7 @@ let owned = ['fists'], equipped = 'fists', abil = [];
 try { const sv = JSON.parse(localStorage.getItem(WKEY) || 'null'); if (sv) { owned = sv.owned; equipped = sv.equipped; abil = sv.abil || []; } } catch (e) {}
 const has = id => abil.includes(id);
 const weapon = () => WEAPONS.find(w => w.id === equipped && owned.includes(w.id)) || WEAPONS[WEAPONS.length - 1];
-const saveW = () => { try { localStorage.setItem(WKEY, JSON.stringify({ owned, equipped, abil })); } catch (e) {} };
+const saveW = () => { if (devRun) return; try { localStorage.setItem(WKEY, JSON.stringify({ owned, equipped, abil })); } catch (e) {} };
 const COMBAT = {
   haunted:  ['Reaper’s Procession', -2.5, -.2, 1.5,  12, 'crescent', '#a8ffe0', 132, .055],
   lantern:  ['Soul Beacon',          -1.4, .25, .85,  1, 'orbit',    '#75ffb5', 510, .03],
@@ -1007,7 +1053,7 @@ function addMinion() {
   if (!training || tut || mode !== 'play' || enemies.filter(e => !e.dummy && e.state !== 'dead').length >= 8) return;
   spawn(['grunt', 'ninja', 'brute', 'boss'][spawnI++ % 4]);
 }
-function saveCoins() { try { localStorage.setItem('stickman-showdown-coins', coins); } catch (e) {} }
+function saveCoins() { if (devRun) return; try { localStorage.setItem('stickman-showdown-coins', coins); } catch (e) {} }
 function spawnDummy() {
   const e = new Fighter(player.x < W / 2 ? player.x + 220 : player.x - 220, GY, 'grunt', false);
   e.dummy = true; e.rise = e.riseMax = .8; e.max = e.hp = e.ghost = 400; e.gap = 0; enemies.push(e);
@@ -1054,6 +1100,7 @@ function talkUI() {
 $('talkBtn').addEventListener('click', e => { e.currentTarget.blur(); interact(); });
 function homePlay() { if (tutDone) showDiff(); else startTutorial(); }
 function toHome() {
+  restoreCheatRun();
   devRun = false; mode = 'menu'; training = false; tut = null; talk = null; npc = null; afterShop = null;
   enemies = []; allies = []; spooks = []; shots = []; parts = []; drops = []; bolts.length = 0; queue = [];
   platforms.length = pits.length = spikes.length = 0; objs = []; strikes = []; blasts = []; rage = 0; apart.length = 0; lastMi = -1; cam = lockX = 0; locked = true; cleared = false; boundL = 0; boundR = W; curZone = 0;
@@ -1064,7 +1111,10 @@ function toHome() {
   $('home').classList.remove('hide'); refreshHome();
 }
 
-function retry() { start(false, retryFrom, diff); }
+function retry() {
+  if (cheatActive()) devFlag = true;
+  start(false, retryFrom, diff);
+}
 
 // ---------- interactive tutorial ----------
 const TUT = [
@@ -1122,13 +1172,14 @@ function drawTut() {
   for (let i = 0; i < TUT.length; i++) { ctx.fillStyle = i < tut.step ? '#7fe0a0' : i === tut.step ? '#ffd166' : 'rgba(255,255,255,.25)'; ctx.fillRect(34 + i * 36, 76 + h - 16, 30, 6); }
 }
 function start(isTrain, from, d, isTut) {
+  if (!devFlag) restoreCheatRun();
   devRun = devFlag; devFlag = false;
   player = new Fighter(W / 2, GY, 'hero', true);
   if (has('vit')) player.max = player.hp = player.ghost = 160;
   enemies = []; parts = []; queue = []; allies = []; spooks = []; npc = null; talk = null; flags = { apple: false, potion: false, met50: false };
   wave = score = kills = combo = comboT = shake = freeze = waveWait = overT = ult = ring = 0;
   training = !!(isTrain || isTut); tut = isTut ? { step: 0, t: 0, spawned: 0 } : null;
-  if (d) { diff = d; if (!training) { try { localStorage.setItem(LD_KEY, d); } catch (e) {} } }
+  if (d) { diff = d; if (!training && !devRun) { try { localStorage.setItem(LD_KEY, d); } catch (e) {} } }
   combatFX.length = 0; ultimateCast = null;
   Object.keys(done).forEach(k => delete done[k]); drops = []; shots = []; cyc = 0; smash = null; fury = null; reviveUsed = false;
   $('foe').classList.toggle('off', !training || !!tut); resetLeave();
@@ -1138,14 +1189,15 @@ function start(isTrain, from, d, isTut) {
   mode = 'play'; for (const id of ['menu', 'home', 'diff', 'shop', 'dev']) $(id).classList.add('hide'); btn.blur(); btn2.blur();
 }
 function togglePause() {
+  if (cheatPanelOpen()) return;
   if (mode === 'play') { mode = 'pause'; show('Paused', tut ? 'Tutorial paused.' : 'Take a breath.', 'Resume', 'Main menu'); }
   else if (mode === 'pause') { mode = 'play'; menu.classList.add('hide'); btn.blur(); }
 }
 function gameOver() {
-  mode = 'over'; retryFrom = cks[diff] || 0;
-  const fresh = score > best;
+  mode = 'over'; retryFrom = devRun ? wave : (cks[diff] || 0);
+  const fresh = !devRun && score > best;
   if (fresh) { best = score; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} }
-  show('Knocked out', `${DIFF[diff].name} &middot; Wave ${wave} &middot; ${kills} defeated &middot; ${score} pts<br>${fresh ? 'New best score!' : 'Best: ' + best}<br>Coins: ${coins} (spend them in the Shop)`, retryFrom ? `Retry from wave ${retryFrom}` : 'Fight again');
+  show('Knocked out', `${DIFF[diff].name} &middot; Wave ${wave} &middot; ${kills} defeated &middot; ${score} pts<br>${fresh ? 'New best score!' : 'Best: ' + best}<br>Coins: ${coins}${devRun ? ' (cheat run)' : ' (spend them in the Shop)'}`, retryFrom ? `Retry from wave ${retryFrom}` : 'Fight again');
 }
 
 function startTalk(lines, done) { talk = { lines, i: 0, done }; sfx(500, .05, 'sine', .04); }
@@ -1190,10 +1242,14 @@ function objective() {
   return '';
 }
 function victory() {
-  mode = 'over'; retryFrom = 0; if (score > best) { best = score; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} }
+  mode = 'over'; retryFrom = 0; if (!devRun && score > best) { best = score; try { localStorage.setItem(BEST_KEY, best); } catch (e) {} }
   show('Victory!', `All 100 waves cleared &middot; ${kills} defeated &middot; ${score} pts<br>Coins: ${coins}`, 'Play again');
 }
 function update(dt) {
+  if (cheatActive()) {
+    if (cheatSettings.god) { player.hp = player.max; player.inv = Math.max(player.inv, .15); }
+    if (cheatSettings.ultimate) ult = 100;
+  }
   clock += dt; shake = Math.max(0, shake - 60 * dt);
   if (freeze > 0) { freeze -= dt; return; }
   updateSignature(dt);
@@ -1567,7 +1623,8 @@ function fall(f) {
   sfx(110, .3, 'sawtooth', .08);
   if (f.type === 'boss' && !f.reaper) { f.x = lockX + W / 2 + R(-60, 60); f.y = GY; f.vx = f.vy = 0; f.gr = true; f.inv = .5; f.state = 'idle'; f.stun = 0; return; }
   if (!f.isP) { f.hp = 0; f.state = 'dead'; f.t = 2; f.vy = 0; f.y = H + 60; return; }
-  f.hp -= 20; shake = 12;
+  if (!cheatActive() || !cheatSettings.god) f.hp -= 20;
+  shake = 12;
   if (f.hp <= 0) kill(f, { dir: 1 });
   if (f.state === 'dead') { f.y = H + 60; f.vy = 0; return; }
   f.x = f.safeX; f.y = GY; f.vx = f.vy = 0; f.gr = true; f.inv = 1.5; f.state = 'idle'; f.stun = 0;
@@ -2543,27 +2600,187 @@ function draw() {
   ctx.restore(); hud(); if (mode === 'play' || mode === 'pause') drawCombatTitle();
 }
 
-// ---------- TEMPORARY wave test tool: set DEV_WAVE_SELECTOR=false (or delete this block) when told the code 1234567890 ----------
-const DEV_WAVE_SELECTOR = true;
-(function () {
-  if (!DEV_WAVE_SELECTOR) { ['hDev', 'dev', 'dctl'].forEach(id => $(id) && $(id).remove()); return; }
-  let dd = diff || 'easy'; const inp = $('devWave'), cl = v => Math.max(1, Math.min(100, Math.round(+v) || 1));
-  const note = w => w === 34 ? 'Gravekeeper quest (apple)' : w === 40 ? 'Lab: brew the potion' : w === 50 ? 'Reaper: weaken it, give the potion' : w % 5 === 0 ? 'Boss wave' : '';
-  const info = () => { const w = cl(inp.value); $('devInfo').textContent = `Wave ${w} — ${MAPS[mapIdxOf(w)].name}${note(w) ? ' — ' + note(w) : ''}`; };
-  const set = v => { inp.value = cl(v); info(); };
-  const ch = $('devChips'); [1, 5, 10, 20, 30, 34, 35, 40, 41, 45, 50, 51, 60, 70, 80, 90, 100].forEach(w => { const b = document.createElement('button'); b.className = 'alt tiny'; b.textContent = w; b.onclick = () => set(w); ch.appendChild(b); });
-  const dl = $('devDiff'); const dbs = Object.keys(DIFF).map(k => { const b = document.createElement('button'); b.className = 'alt'; b.textContent = DIFF[k].name; b.onclick = () => { dd = k; dbs.forEach(x => x.classList.toggle('on', x === b)); }; b.classList.toggle('on', k === dd); dl.appendChild(b); return b; });
-  $('dm10').onclick = () => set(+inp.value - 10); $('dm1').onclick = () => set(+inp.value - 1); $('dp1').onclick = () => set(+inp.value + 1); $('dp10').onclick = () => set(+inp.value + 10);
-  inp.addEventListener('input', info); inp.addEventListener('change', () => set(inp.value));
-  const go = (w, d) => { devFlag = true; start(false, cl(w), d); };
-  $('hDev').onclick = () => { $('dev').classList.remove('hide'); set(inp.value || 1); };
-  $('devBack').onclick = () => $('dev').classList.add('hide');
-  $('devGo').onclick = () => go(inp.value, dd);
-  const jump = d => go(Math.max(1, Math.min(100, wave + d)), diff);
-  $('dPrev').onclick = () => jump(-1); $('dNext').onclick = () => jump(1); $('dNext10').onclick = () => jump(10);
-  addEventListener('keydown', e => { if (!devRun || mode !== 'play' || (e.target && e.target.tagName === 'INPUT')) return; if (e.key === '[') jump(-1); else if (e.key === ']') jump(1); });
-  set(1);
-})();
+// Local gate for this static game. Cheat settings and edits live in the current run.
+const CHEAT_KEY = 'stickman-showdown-cheat-lock-v1';
+let cheatUnlocked = false, cheatSnapshot = null, cheatRequest = 0;
+const cheatSettings = { god: false, ultimate: false, abilities: false };
+const cheatPanelOpen = () => !$('dev').classList.contains('hide');
+const cheatActive = () => devRun && cheatUnlocked && cheatSnapshot !== null;
+const cheatStatus = message => { $('cheatStatus').textContent = message; };
+function setCheatBackdrop(inert) {
+  for (const id of ['home', 'ctl', 'dctl', 'touch', 'talkBtn']) $(id).inert = inert;
+}
+
+function readCheatLock() {
+  const stored = localStorage.getItem(CHEAT_KEY);
+  if (stored === null) return null;
+  const lock = JSON.parse(stored);
+  if (!lock || !Array.isArray(lock.salt) || lock.salt.length !== 16 ||
+      !lock.salt.every(x => Number.isInteger(x) && x >= 0 && x <= 255) ||
+      typeof lock.digest !== 'string' || !/^[0-9a-f]{64}$/.test(lock.digest)) {
+    throw new Error('Invalid local cheat lock');
+  }
+  return lock;
+}
+async function cheatDigest(password, salt) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: Uint8Array.from(salt),
+    iterations: 210000, hash: 'SHA-256' }, key, 256);
+  return Array.from(new Uint8Array(bits), n => n.toString(16).padStart(2, '0')).join('');
+}
+function showCheatControls() {
+  const active = cheatActive();
+  $('cheatGate').classList.add('off');
+  $('cheatControls').classList.remove('off');
+  $('cheatActions').classList.toggle('off', !active);
+  $('devGo').textContent = active ? 'Jump to selected wave' : 'Start cheat run';
+  $('devBack').textContent = active ? 'Resume' : 'Back';
+  $('cheatWeapon').value = equipped;
+  $('cheatDiff').value = diff;
+  $('devWave').value = active ? wave : 1;
+  $('devGo').focus();
+}
+function openCheatPanel() {
+  if (mode !== 'menu' && !cheatActive()) return;
+  clearCheatInputs();
+  $('dev').classList.remove('hide');
+  setCheatBackdrop(true);
+  cheatStatus('');
+  if (cheatUnlocked) { showCheatControls(); return; }
+  $('cheatGate').classList.remove('off');
+  $('cheatControls').classList.add('off');
+  $('devBack').textContent = 'Back';
+  try {
+    const setup = readCheatLock() === null;
+    if (!globalThis.crypto?.subtle) throw new Error('Secure browser storage needed');
+    $('cheatHelp').textContent = setup ? 'Set a cheat password for this browser. Use at least 6 characters.' : 'Enter your cheat password to unlock these controls.';
+    $('cheatConfirmLabel').classList.toggle('off', !setup);
+    $('cheatConfirm').classList.toggle('off', !setup);
+    $('cheatConfirm').required = setup;
+    $('cheatPassword').autocomplete = setup ? 'new-password' : 'current-password';
+    $('cheatUnlock').textContent = setup ? 'Set password and unlock' : 'Unlock';
+    $('cheatUnlock').disabled = false;
+    $('cheatPassword').focus();
+  } catch {
+    $('cheatHelp').textContent = 'Cheat Mode needs working browser storage on a secure page.';
+    $('cheatUnlock').disabled = true;
+  }
+}
+function clearCheatInputs() {
+  Object.keys(held).forEach(release);
+  Object.keys(buf).forEach(k => buf[k] = -9);
+}
+function closeCheatPanel() {
+  cheatRequest++;
+  $('cheatPassword').value = $('cheatConfirm').value = '';
+  $('dev').classList.add('hide');
+  setCheatBackdrop(false);
+  clearCheatInputs();
+  if (!devRun) cheatUnlocked = false;
+  $(devRun ? 'cheatOpen' : 'hDev').focus();
+}
+function restoreCheatRun() {
+  if (cheatSnapshot) {
+    ({ coins, owned, equipped, abil, diff } = cheatSnapshot);
+    cheatSnapshot = null;
+  }
+  cheatUnlocked = false;
+  cheatRequest++;
+  cheatSettings.god = cheatSettings.ultimate = cheatSettings.abilities = false;
+  for (const id of ['cheatGod', 'cheatUlt', 'cheatAbilities']) $(id).checked = false;
+  setCheatBackdrop(false);
+}
+function launchCheatRun() {
+  if (!cheatUnlocked || !cheatPanelOpen()) return;
+  const from = Math.max(1, Math.min(100, Math.trunc(Number($('devWave').value)) || 1));
+  const chosenDifficulty = $('cheatDiff').value;
+  const chosenWeapon = WEAPONS.find(w => w.id === $('cheatWeapon').value);
+  if (!Object.hasOwn(DIFF, chosenDifficulty) || !chosenWeapon) return;
+  if (!cheatSnapshot) cheatSnapshot = { coins, owned, equipped, abil, diff };
+  owned = WEAPONS.map(w => w.id);
+  equipped = chosenWeapon.id;
+  abil = cheatSettings.abilities ? ABIL.map(a => a.id) : [...cheatSnapshot.abil];
+  devFlag = true;
+  setCheatBackdrop(false);
+  clearCheatInputs();
+  start(false, from, chosenDifficulty);
+  syncUI();
+  if (cheatSettings.ultimate) ult = 100;
+  if (cheatSettings.god) player.inv = .15;
+}
+function cheatAction(action) {
+  if (!cheatActive() || !cheatPanelOpen() || mode !== 'play') return;
+  if (action === 'spawn') {
+    const type = $('cheatEnemy').value;
+    if (!['grunt','ninja','brute','boss'].includes(type)) return;
+    if (enemies.filter(e => e.state !== 'dead').length >= 20) { cheatStatus('Enemy limit reached.'); return; }
+    spawn(type); cheatStatus('Enemy spawned.');
+  } else if (action === 'clear') {
+    enemies = []; queue = []; cheatStatus('Enemies and spawn queue cleared.');
+  } else if (action === 'heal') {
+    player.hp = player.max; cheatStatus('Health restored.');
+  } else if (action === 'charge') {
+    ult = 100; cheatStatus('Ultimate charged.');
+  } else if (action === 'coins') {
+    coins += 1000; cheatStatus(`${coins} cheat-run coins.`);
+  }
+}
+
+$('hDev').onclick = openCheatPanel;
+$('cheatOpen').onclick = openCheatPanel;
+$('devBack').onclick = closeCheatPanel;
+$('devGo').onclick = launchCheatRun;
+$('cheatWeapon').innerHTML = WEAPONS.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+$('cheatWeapon').onchange = () => {
+  if (cheatActive() && cheatPanelOpen() && WEAPONS.some(w => w.id === $('cheatWeapon').value)) {
+    equipped = $('cheatWeapon').value;
+    player.state = 'idle'; player.t = 0; player.stun = 0;
+    cheatStatus('Weapon equipped.');
+  }
+};
+for (const [id, setting] of [['cheatGod','god'], ['cheatUlt','ultimate'], ['cheatAbilities','abilities']]) {
+  $(id).onchange = () => {
+    if (!cheatUnlocked || !cheatPanelOpen()) return;
+    cheatSettings[setting] = $(id).checked;
+    if (cheatActive() && setting === 'abilities') {
+      abil = cheatSettings.abilities ? ABIL.map(a => a.id) : [...cheatSnapshot.abil];
+      player.max = has('vit') ? 160 : player.T.hp;
+      player.hp = Math.min(player.hp, player.max);
+    }
+  };
+}
+for (const [id, action] of [['cheatSpawn','spawn'], ['cheatClear','clear'], ['cheatHeal','heal'], ['cheatCharge','charge'], ['cheatCoins','coins']]) {
+  $(id).onclick = () => cheatAction(action);
+}
+$('cheatGate').onsubmit = async event => {
+  event.preventDefault();
+  if (!cheatPanelOpen() || cheatUnlocked || $('cheatUnlock').disabled) return;
+  const password = $('cheatPassword').value;
+  const confirmation = $('cheatConfirm').value;
+  if (password.length < 6 || password.length > 128) { cheatStatus('Use 6–128 characters.'); return; }
+  const token = ++cheatRequest;
+  $('cheatUnlock').disabled = true;
+  cheatStatus('');
+  try {
+    const lock = readCheatLock();
+    if (!lock && password !== confirmation) { cheatStatus('The passwords do not match.'); return; }
+    const salt = lock ? lock.salt : Array.from(crypto.getRandomValues(new Uint8Array(16)));
+    const digest = await cheatDigest(password, salt);
+    if (token !== cheatRequest || !cheatPanelOpen()) return;
+    if (lock && lock.digest !== digest) { cheatStatus('Incorrect password.'); $('cheatPassword').select(); return; }
+    if (!lock) {
+      if (readCheatLock() !== null) { cheatStatus('A password was set in another tab. Reopen Cheat Mode.'); return; }
+      localStorage.setItem(CHEAT_KEY, JSON.stringify({ salt, digest }));
+    }
+    cheatUnlocked = true;
+    $('cheatPassword').value = $('cheatConfirm').value = '';
+    showCheatControls();
+  } catch {
+    if (token === cheatRequest) cheatStatus('Could not verify or save the local password.');
+  } finally {
+    if (token === cheatRequest) $('cheatUnlock').disabled = false;
+  }
+};
 
 // ---------- main loop ----------
 player = new Fighter(W / 2, GY, 'hero', true);
@@ -2574,7 +2791,8 @@ let last = 0, lastMode = '';
   if (mode !== lastMode) { lastMode = mode; syncUI(); }
   if (leaveT > 0 && (leaveT -= dt) <= 0) resetLeave();
   talkUI();
-  if (mode === 'play') update(dt); else if (mode !== 'pause') clock += dt;
+  if (mode === 'play') { if (!cheatPanelOpen()) update(dt); }
+  else if (mode !== 'pause') clock += dt;
   draw(); requestAnimationFrame(loop);
 })(0);
 })();
