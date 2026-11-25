@@ -133,7 +133,7 @@ body[data-mode]:not([data-mode="play"]) #touch { display: none !important; }
       <div class="row2"><button id="shopBtn" class="alt">Weapons</button><button id="abBtn" class="alt">Abilities</button></div>
     </div>
     <div class="hf">
-      <span>A/D move &middot; W jump &middot; J punch &middot; K kick &middot; L block &middot; Shift dash &middot; U ultimate &middot; E talk &middot; P pause</span>
+      <span>A/D move &middot; W jump &middot; J attack &middot; K heavy &middot; L block &middot; Shift dash &middot; U ultimate &middot; E talk &middot; P pause</span>
       <button id="mute" class="alt tiny">Sound: on</button>
     </div>
   </div>
@@ -173,7 +173,7 @@ body[data-mode]:not([data-mode="play"]) #touch { display: none !important; }
 
   <div id="touch">
     <div id="joy"><div id="knob"></div></div>
-    <div class="grp"><button data-k="p">Punch</button><button data-k="k">Kick</button><button data-k="d">Dash</button><button data-k="x">Ult</button><button id="foe" class="off">+Foe</button></div>
+    <div class="grp"><button data-k="p">Attack</button><button data-k="k">Heavy</button><button data-k="d">Dash</button><button data-k="x">Ult</button><button id="foe" class="off">+Foe</button></div>
   </div>
 </div>
 <script>
@@ -349,21 +349,21 @@ const NEUT = { hp: 1, dmg: 1, heal: .25, coin: 1, extra: 0, sp: 1 };
 const dfx = () => (training ? NEUT : DIFF[diff]);
 
 const WEAPONS = [
-  { id: 'haunted', name: 'Haunted Scythe', cost: 0, locked: 1, c: '#9affc8', len: 64, dmg: 1, reach: 30, speed: 1.05, frac: 1 / 7, ult: 'haunt', desc: "Reward from the Reaper for the healing potion at wave 50. Ability: every basic attack deals 1/7 of the enemy's health. Ultimate: Haunting summons 3 medium zombies, 3 spirits and 2 ghosts, each hit dealing 1/15 of the enemy's health." },
-  { id: 'lantern', name: 'Soul Lantern', cost: 1500, c: '#7dffb0', len: 36, dmg: 1.5, reach: 14, speed: 0.95, chain: 1, slow: 1, ult: 'blizzard', desc: 'Ability: hits slow enemies and arc spectral light to 2 nearby foes. Ultimate: Blizzard freezes everyone on screen.' },
-  { id: 'chain', name: 'Wraith Chain', cost: 950, c: '#a0a8c8', len: 60, dmg: 1.2, reach: 34, speed: 1, lift: 1, dot: [4, 3], ult: 'fury', desc: 'Ability: long reach, lifts enemies and leaves them bleeding. Ultimate: Dragon Fury, a 10 hit barrage on the nearest enemy.' },
-  { id: 'cleaver', name: 'Bone Cleaver', cost: 400, c: '#e8e0c8', len: 38, dmg: 1.45, reach: 10, speed: 0.9, crit: .15, dot: [4, 3], ult: 'dash', desc: 'Ability: 15% chance of triple damage, wounds bleed. Ultimate: Blade Dash slices through everyone in front of you.' },
-  { id: 'shovel', name: 'Gravedigger Shovel', cost: 90, c: '#8f7a5a', len: 50, dmg: 1.25, reach: 16, speed: 1.05, heal: 3, ult: 'smash', desc: 'Ability: heal 3 HP per kill. Ultimate: Mega Smash marks a spot, then crushes it.' },
-  { id: 'thunder', name: 'Stormwraith Gauntlets', cost: 1700, c: '#ffe066', len: 14, dmg: 2.2, reach: 6, speed: 0.85, chain: 1, ultx: 1.8, ult: 'storm', desc: 'Ability: hits zap 2 nearby enemies, ultimate charges faster. Ultimate: Storm strikes every enemy with lightning.' },
-  { id: 'flame', name: 'Hellfire Spear', cost: 1100, c: '#ff7b3a', len: 64, dmg: 1.6, reach: 30, speed: 1, dot: [7, 3], ult: 'firewave', desc: 'Ability: huge reach, hits burn. Ultimate: Fire Wave, a fireball that burns everything it passes.' },
-  { id: 'scythe', name: 'Soulreaper Scythe', cost: 850, c: '#b58cff', len: 56, dmg: 1.5, reach: 24, speed: 1.1, leech: .25, ult: 'harvest', desc: 'Ability: heal 25% of damage dealt. Ultimate: Harvest hurts everyone and heals you for each enemy hit.' },
-  { id: 'frost', name: 'Wintergrave Blade', cost: 730, c: '#7fe3ff', len: 46, dmg: 1.35, reach: 14, speed: 0.9, slow: 1, ult: 'blizzard', desc: 'Ability: hits slow enemies. Ultimate: Blizzard freezes everyone on screen.' },
-  { id: 'daggers', name: 'Phantom Fangs', cost: 650, c: '#c7cde0', len: 16, dmg: 0.75, reach: 0, speed: 0.8, dot: [3, 3], twin: 1, ult: 'daggers', desc: 'Ability: every punch stabs twice and causes bleeding. Ultimate: throw 5 daggers that hit for 45 each.' },
-  { id: 'hammer', name: 'Tombstone Hammer', cost: 480, c: '#9a8f7a', len: 44, dmg: 2, reach: 8, speed: 1.35, quake: 1, ult: 'smash', desc: 'Ability: punches shake the ground. Ultimate: Mega Smash marks a spot, then crushes it.' },
-  { id: 'katana', name: 'Cursed Katana', cost: 270, c: '#e8eefc', len: 42, dmg: 1.5, reach: 12, speed: 0.95, crit: .2, ult: 'dash', desc: 'Ability: 20% chance of triple damage. Ultimate: Blade Dash slices through everyone in front of you.' },
-  { id: 'nunchucks', name: 'Bone Nunchucks', cost: 200, c: '#c97b4a', len: 30, dmg: 0.9, reach: 10, speed: 0.8, frenzy: 1, ult: 'fury', desc: 'Ability: damage grows with your combo. Ultimate: Dragon Fury, a 10 hit barrage on the nearest enemy.' },
-  { id: 'staff', name: 'Hollow Bone Staff', cost: 50, c: '#d9b36c', len: 58, dmg: 1.1, reach: 26, speed: 1, lift: 1, ult: 'cyclone', desc: 'Ability: long reach, punches pop enemies up. Ultimate: Cyclone spins and drags enemies in.' },
-  { id: 'fists', name: 'Haunted Fists', cost: 0, c: '#b8f0d8', len: 0, dmg: 1, reach: 0, speed: 1, heal: 5, ult: 'shock', desc: 'Ability: heal 5 HP per kill. Ultimate: Shockwave blasts everyone nearby.' },
+  { id: 'haunted', name: 'Haunted Scythe', cost: 0, locked: 1, c: '#9affc8', len: 64, dmg: 1, reach: 30, speed: 1.05, frac: 1 / 7, ult: 'haunt', desc: "Reward from the Reaper for the healing potion at wave 50. Ability: every basic attack deals 1/7 of the enemy's health. Ultimate: Reaper’s Procession summons 3 medium zombies, 3 spirits and 2 ghosts, each hit dealing 1/15 of the enemy's health." },
+  { id: 'lantern', name: 'Soul Lantern', cost: 1500, c: '#7dffb0', len: 36, dmg: 1.5, reach: 14, speed: 0.95, chain: 1, slow: 1, ult: 'beacon', desc: 'Ability: hits slow enemies and arc spectral light to 2 nearby foes. Ultimate: Soul Beacon pulls and strikes nearby enemies.' },
+  { id: 'chain', name: 'Wraith Chain', cost: 950, c: '#a0a8c8', len: 60, dmg: 1.2, reach: 34, speed: 1, lift: 1, dot: [4, 3], ult: 'snare', desc: 'Ability: long reach, lifts enemies and leaves them bleeding. Ultimate: Wraith Snare pulls nearby enemies in and crushes them.' },
+  { id: 'cleaver', name: 'Bone Cleaver', cost: 400, c: '#e8e0c8', len: 38, dmg: 1.45, reach: 10, speed: 0.9, crit: .15, dot: [4, 3], ult: 'cleave', desc: 'Ability: 15% chance of triple damage, wounds bleed. Ultimate: Butcher’s Stampede sends three heavy cleaving waves down the arena.' },
+  { id: 'shovel', name: 'Gravedigger Shovel', cost: 90, c: '#8f7a5a', len: 50, dmg: 1.25, reach: 16, speed: 1.05, heal: 3, ult: 'grave', desc: 'Ability: heal 3 HP per kill. Ultimate: Open Grave pulls enemies down, then throws them out.' },
+  { id: 'thunder', name: 'Stormwraith Gauntlets', cost: 1700, c: '#ffe066', len: 14, dmg: 2.2, reach: 6, speed: 0.85, chain: 1, ultx: 1.8, ult: 'storm', desc: 'Ability: hits zap 2 nearby enemies, ultimate charges faster. Ultimate: Skybreaker strikes every enemy with lightning.' },
+  { id: 'flame', name: 'Hellfire Spear', cost: 1100, c: '#ff7b3a', len: 64, dmg: 1.6, reach: 30, speed: 1, dot: [7, 3], ult: 'firewave', desc: 'Ability: huge reach, hits burn. Ultimate: Inferno Lance sends a fireball that burns everything it passes.' },
+  { id: 'scythe', name: 'Soulreaper Scythe', cost: 850, c: '#b58cff', len: 56, dmg: 1.5, reach: 24, speed: 1.1, leech: .25, ult: 'harvest', desc: 'Ability: heal 25% of damage dealt. Ultimate: Soul Harvest hurts everyone and heals you for each enemy hit.' },
+  { id: 'frost', name: 'Wintergrave Blade', cost: 730, c: '#7fe3ff', len: 46, dmg: 1.35, reach: 14, speed: 0.9, slow: 1, ult: 'glacier', desc: 'Ability: hits slow enemies. Ultimate: Glacier March sends a row of ice pillars across the arena.' },
+  { id: 'daggers', name: 'Phantom Fangs', cost: 650, c: '#c7cde0', len: 16, dmg: 0.75, reach: 0, speed: 0.8, dot: [3, 3], twin: 1, ult: 'daggers', desc: 'Ability: every punch stabs twice and causes bleeding. Ultimate: Phantom Fan throws 5 daggers that hit for 45 each.' },
+  { id: 'hammer', name: 'Tombstone Hammer', cost: 480, c: '#9a8f7a', len: 44, dmg: 2, reach: 8, speed: 1.35, quake: 1, ult: 'smash', desc: 'Ability: punches shake the ground. Ultimate: Meteor Anvil marks a spot, then crushes it.' },
+  { id: 'katana', name: 'Cursed Katana', cost: 270, c: '#e8eefc', len: 42, dmg: 1.5, reach: 12, speed: 0.95, crit: .2, ult: 'dash', desc: 'Ability: 20% chance of triple damage. Ultimate: Moonstep slices through everyone in front of you.' },
+  { id: 'nunchucks', name: 'Bone Nunchucks', cost: 200, c: '#c97b4a', len: 30, dmg: 0.9, reach: 10, speed: 0.8, frenzy: 1, ult: 'fury', desc: 'Ability: damage grows with your combo. Ultimate: Bonewheel Barrage delivers 10 hits on the nearest enemy.' },
+  { id: 'staff', name: 'Hollow Bone Staff', cost: 50, c: '#d9b36c', len: 58, dmg: 1.1, reach: 26, speed: 1, lift: 1, ult: 'cyclone', desc: 'Ability: long reach, punches pop enemies up. Ultimate: Hollow Cyclone spins and drags enemies in.' },
+  { id: 'fists', name: 'Haunted Fists', cost: 0, c: '#b8f0d8', len: 0, dmg: 1, reach: 0, speed: 1, heal: 5, ult: 'shock', desc: 'Ability: heal 5 HP per kill. Ultimate: Grave Pulse blasts everyone nearby.' },
 ];
 const ABIL = [
   { id: 'djump', name: 'Double Jump', cost: 40, desc: 'Jump again in mid-air.' },
@@ -378,6 +378,281 @@ try { const sv = JSON.parse(localStorage.getItem(WKEY) || 'null'); if (sv) { own
 const has = id => abil.includes(id);
 const weapon = () => WEAPONS.find(w => w.id === equipped && owned.includes(w.id)) || WEAPONS[WEAPONS.length - 1];
 const saveW = () => { try { localStorage.setItem(WKEY, JSON.stringify({ owned, equipped, abil })); } catch (e) {} };
+const COMBAT = {
+  haunted:  ['Reaper’s Procession', -2.5, -.2, 1.5,  12, 'crescent', '#a8ffe0', 132, .055],
+  lantern:  ['Soul Beacon',          -1.4, .25, .85,  1, 'orbit',    '#75ffb5', 510, .03],
+  chain:    ['Wraith Snare',          2.6, -.05, -.8, 8, 'links',    '#c2c9ff', 246, .04],
+  cleaver:  ['Butcher’s Stampede',   -2.1, .4, 1.65, 16, 'cleave',   '#ff9b91', 104, .065],
+  shovel:   ['Open Grave',            1.45, -.6, -1.9, 7, 'earth',   '#d7ac71', 84, .055],
+  thunder:  ['Skybreaker',           -1.85, -.5, .5,  20, 'bolt',   '#ffe374', 375, .047],
+  flame:    ['Inferno Lance',         -.24, -.07, .05, 24, 'ember',  '#ff7840', 180, .03],
+  scythe:   ['Soul Harvest',           2.9, .2, -1.5, 11, 'ribbon', '#c49aff', 295, .052],
+  frost:    ['Glacier March',         -1.6, -.5, .3,  14, 'crystal','#a6efff', 680, .043],
+  daggers:  ['Phantom Fan',           -.7, -.18, .68, 18, 'cross',   '#e2ddff', 760, .018],
+  hammer:   ['Meteor Anvil',          -2.8, .74, 1.45, 8, 'quake',  '#ffc36a', 60, .085],
+  katana:   ['Moonstep',               .95, -.48, -1.95, 20, 'line', '#f3f5ff', 590, .025],
+  nunchucks:['Bonewheel Barrage',     -2.65, -.12, 2.1, 7, 'spiral', '#f8c183', 310, .022],
+  staff:    ['Hollow Cyclone',         1.8, -.3, -2.5, 10, 'wind',   '#e9d394', 208, .034],
+  fists:    ['Grave Pulse',            -.7, -.12, .72, 19, 'pulse',  '#b8f0d8', 94, .058],
+};
+const clamp01 = n => Math.max(0, Math.min(1, n));
+const lerpMove = (a, b, t) => a + (b - a) * t;
+function combatPose(w, atk, t) {
+  const [, wind, impact, follow, lean] = COMBAT[w.id];
+  const hit = atk.hit;
+  const heavy = !!atk.k && w.id !== 'fists';
+  const start = heavy ? wind - .28 : wind;
+  const end = heavy ? follow + Math.sign(follow - impact) * .28 : follow;
+  const blend = (a, b, p) => lerpMove(a, b, clamp01(p));
+  const lift = hit * .53, release = hit + (atk.dur - hit) * .43;
+  const angle = t < lift ? blend(-1.1, start, t / lift) :
+    t < hit ? blend(start, impact, (t - lift) / (hit - lift)) :
+    t < release ? blend(impact, end, (t - hit) / (release - hit)) :
+    blend(end, -1.1, (t - release) / (atk.dur - release));
+  const drive = t < hit ? clamp01((t - lift) / (hit - lift)) : clamp01(1 - (t - hit) / (atk.dur - hit));
+  return { angle, arm: [lerpMove(.65, angle * .31, drive), lerpMove(-1.1, angle * .65, Math.max(drive, .45))], lean: lean * drive };
+}
+const combatFX = [];
+let ultimateCast = null;
+function combatFx(kind, x, y, d, color, duration = .34, extra = {}) {
+  if (combatFX.length >= 72) combatFX.shift();
+  combatFX.push({ kind, x, y, d, color, duration, t: 0, ...extra });
+}
+const WEAPON_RECOIL = {
+  haunted: [.76, 1.10], lantern: [.45, 1.15], chain: [-.58, 1.08],
+  cleaver: [1.08, 1.15], shovel: [.8, 1.12], thunder: [1.3, 1.22],
+  flame: [1.18, .84], scythe: [-.34, 1.12], frost: [.58, 1.19],
+  daggers: [.54, .82], hammer: [1.39, 1.2], katana: [.81, .81],
+  nunchucks: [.72, .93], staff: [.89, 1.02], fists: [1, 1],
+};
+function weaponImpact(w, x, y, d, heavy, target) {
+  const [, , , , , style, color, note, stop] = COMBAT[w.id];
+  combatFx(style, x, y, d, color, heavy ? .49 : .34, { size: heavy ? 1.28 : 1, floor: target.y });
+  freeze = Math.max(freeze, stop * (heavy ? 1.2 : 1));
+  shake = Math.max(shake, Math.round(stop * 115) + (heavy ? 3 : 0));
+  sfx(note, stop * 1.8 + .055, stop > .045 ? 'triangle' : 'sine', .09);
+}
+const ultimateTarget = (e) => e.state !== 'dead' && e.rise <= 0 && !e.weak;
+function castDamage(e, damage, dir, stun = .4, launch = 0) {
+  if (!ultimateTarget(e)) return;
+  hurt(e, damage, dir);
+  if (e.state === 'dead') return;
+  e.state = 'hit'; e.t = 0; e.stun = Math.max(e.stun, stun); e.vx = dir * 180;
+  if (launch) { e.vy = launch; e.gr = false; }
+}
+function startSignature(w) {
+  const [name, , , , , , color, note] = COMBAT[w.id];
+  const next = { id: w.id, x: player.x, y: player.y, d: player.dir, color, t: 0, step: 0, hits: new Set() };
+  ultimateCast = next;
+  combatFx('title', 0, 0, 1, color, 1.18, { name });
+  sfx(note * .65, .25, 'triangle', .09);
+  return next;
+}
+function updateSignature(dt) {
+  for (let i = combatFX.length - 1; i >= 0; i--) {
+    const effect = combatFX[i]; effect.t += dt;
+    if (effect.t >= effect.duration) combatFX.splice(i, 1);
+  }
+  const u = ultimateCast;
+  if (!u) return;
+  u.t += dt;
+  function steps(count, delay, fire) {
+    while (u.step < count && u.t >= .16 + u.step * delay) fire(u.step++);
+  }
+  const live = enemies.filter(ultimateTarget);
+  const burst = (kind, x, y, duration, extra = {}) => combatFx(kind, x, y, u.d, u.color, duration, extra);
+  switch (u.id) {
+    case 'lantern':
+      steps(5, .29, i => {
+        burst('beacon', u.x, u.y - 12, .42, { size: 1 + i * .07 });
+        for (const e of live) if (ultimateTarget(e) && Math.abs(e.x - u.x) < 210 && Math.abs(e.y - u.y) < 125) {
+          burst('tether', u.x, u.y - 82, .32, { x2: e.x, y2: e.y - 45 });
+          castDamage(e, 14, e.x < u.x ? 1 : -1, .32); e.slow = Math.max(e.slow, .7);
+        }
+      }); break;
+    case 'chain':
+      steps(2, .56, i => {
+        burst('snare', u.x, u.y - 60, .65, { size: i ? .62 : 1.35 });
+        for (const e of live) if (ultimateTarget(e) && Math.abs(e.x - u.x) < 285 && Math.abs(e.y - u.y) < 120) {
+          if (!i) { u.hits.add(e); castDamage(e, 22, e.x < u.x ? 1 : -1, .64); e.x = lerpMove(e.x, u.x, .48); }
+          else if (u.hits.has(e)) castDamage(e, 90, e.x < u.x ? -1 : 1, .68, -180);
+        }
+      }); break;
+    case 'cleaver':
+      steps(3, .22, i => shots.push({ form: 'cleaver', x: u.x + u.d * 32, y: u.y - 50 + i * 8,
+        vx: u.d * (570 + i * 70), dmg: 36, life: .74, c: u.color, big: 1, rangeY: 60 }));
+      break;
+    case 'shovel':
+      steps(2, .57, i => {
+        const x = Math.max(boundL + 32, Math.min(boundR - 32, u.x + u.d * 125));
+        burst(i ? 'eruption' : 'grave', x, u.y, i ? .65 : .75);
+        for (const e of live) if (ultimateTarget(e) && Math.abs(e.x - x) < 145 && Math.abs(e.y - u.y) < 105) {
+          if (!i) { u.hits.add(e); castDamage(e, 18, e.x < x ? 1 : -1, .78); e.x = lerpMove(e.x, x, .42); }
+          else if (u.hits.has(e)) castDamage(e, 100, e.x < x ? -1 : 1, .72, -510);
+        }
+      }); break;
+    case 'frost':
+      steps(7, .085, i => {
+        const x = u.x + u.d * (50 + i * 69);
+        if (x > boundR || x < boundL) return;
+        burst('pillar', x, u.y, .68, { size: 1 + i * .08 });
+        for (const e of live) if (ultimateTarget(e) && !u.hits.has(e) && Math.abs(e.x - x) < 59 && Math.abs(e.y - u.y) < 140) {
+          u.hits.add(e); castDamage(e, 53, u.d, 1, -125); e.slow = 4;
+        }
+      }); break;
+  }
+  if (u.t >= 1.65) ultimateCast = null;
+}
+function drawCombatEffect(f) {
+  const p = clamp01(f.t / f.duration), alpha = 1 - p, size = f.size || 1;
+  const r = (12 + p * 46) * size;
+  ctx.save();
+  ctx.translate(f.x, f.y);
+  ctx.globalAlpha = alpha;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const path = (points, width = 2, color = f.color, fill = false) => {
+    ctx.beginPath();
+    for (let i = 0; i < points.length; i++) {
+      const [x, y] = points[i];
+      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    if (fill) { ctx.closePath(); ctx.fillStyle = color; ctx.fill(); }
+    else { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.stroke(); }
+  };
+  const oval = (x, y, rx, ry, width = 2, start = 0, end = Math.PI * 2, tilt = 0) => {
+    ctx.beginPath(); ctx.ellipse(x, y, rx, ry, tilt, start, end);
+    ctx.strokeStyle = f.color; ctx.lineWidth = width; ctx.stroke();
+  };
+  const shards = (count, spread, shape) => {
+    for (let i = 0; i < count; i++) {
+      const a = rnd(i * 3.27 + 7) * Math.PI * 2;
+      const x = Math.cos(a) * spread * p, y = Math.sin(a) * spread * p;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(a); shape(i); ctx.restore();
+    }
+  };
+  const crack = (length, width) => path([[0,0],[length*.17,-9],[length*.39,4],[length*.53,-12],[length*.76,-3],[length,3]],width);
+  switch (f.kind) {
+    case 'crescent':
+      ctx.scale(f.d, 1);
+      oval(-14, 0, r * 1.05, r * 1.46, 5 * alpha + 1, -1.45, 1.25, .28);
+      oval(-32, 0, r * 1.22, r * 1.2, 2, -1.4, 1.02, .28); break;
+    case 'orbit':
+      for (let i = 0; i < 3; i++) {
+        const a = p * 5 + i * 2.094;
+        ctx.fillStyle = f.color; dot(Math.cos(a) * r, Math.sin(a) * r * .68, 5 * alpha + 1);
+      }
+      oval(0,0,r,r*.66,1.5); break;
+    case 'links':
+    case 'snare':
+      for (let i = 0; i < (f.kind === 'snare' ? 24 : 7); i++) {
+        const snare = f.kind === 'snare';
+        const a = snare ? i / 24 * Math.PI * 2 : -.9 + i * .25;
+        const radius = snare ? (170 - p * 55) * size : r;
+        oval(Math.cos(a) * radius * (snare ? 1 : f.d), Math.sin(a) * radius * .7, snare ? 12 : 6, snare ? 6 : 3, 2, 0, 7, a + 1.57);
+      } break;
+    case 'cleave':
+    case 'crescentShot':
+      ctx.scale(f.d, 1);
+      path([[-r * .55, -r], [r*.75,-r*.38],[r*.9,r*.15],[-r*.5,r*.82],[r*.3,.1*r]], 2.8, f.color, true);
+      path([[-r*.4,-r],[r*.78,-r*.38],[r*.9,r*.15],[-r*.5,r*.82]], 2, '#fff0dd'); break;
+    case 'earth':
+    case 'eruption':
+      shards(f.kind === 'eruption' ? 24 : 10, f.kind === 'eruption' ? 158 : 56, i => {
+        if (f.kind === 'eruption') ctx.translate(0, -p * 100);
+        path([[-4,-4],[3+i%4,-2],[5,3],[-2,5]], 1, i % 3 ? f.color : '#6a4938', true);
+      }); break;
+    case 'bolt':
+      for (let i = 0; i < 5; i++) { ctx.rotate(1.24); crack(r, 2.4); } break;
+    case 'ember':
+      ctx.scale(f.d, 1);
+      for (let i = -2; i <= 2; i++) {
+        const y = i * (5 + p * 4);
+        path([[-r*.6,y],[r*.25,y-7],[r,y-2],[r*.05,y+4]], 2, i % 2 ? f.color : '#ffdc8d', true);
+      } break;
+    case 'ribbon':
+      ctx.scale(f.d, 1);
+      for (let j = 0; j < 3; j++) {
+        const pts = Array.from({length: 17}, (_, i) => [(i - 6) * r / 9, Math.sin(i * .31 + p * 5 + j) * r * .43]);
+        path(pts, 3 - j * .6);
+      } break;
+    case 'crystal':
+    case 'pillar':
+      for (let i = -2; i <= 2; i++) {
+        const x = i * (f.kind === 'pillar' ? 18 : 7) * size;
+        const up = f.kind === 'pillar' ? Math.min(1, p * 6) * (112 - 18 * Math.abs(i)) * size : p * (46 - 5 * Math.abs(i)) * size;
+        path([[x-5,0],[x-6,-up*.57],[x+i*3,-up],[x+8,-up*.45],[x+5,0]], 1, f.color, true);
+        path([[x,-2],[x+i*3,-up]], 1.7, '#f3ffff');
+      } break;
+    case 'cross':
+      for (const sign of [-1,1]) path([[-r*.72,sign*r*.65],[r*.8,-sign*r*.65]],2.5,sign === 1 ? f.color : '#a98cfa');
+      shards(5,55,() => path([[-4,0],[5,0]],1.5)); break;
+    case 'quake':
+      ctx.translate(0, (f.floor ?? f.y) - f.y);
+      for (const dir of [-1,1]) { ctx.save(); ctx.scale(dir,1); crack(r * 2.2, 3); ctx.restore(); }
+      oval(0,0,r*2.1,r*.26,2); break;
+    case 'line':
+      ctx.scale(f.d, 1); path([[-r,-r*.58],[r*1.4,r*.37]], 3, '#fff');
+      path([[-r*.8,-r*.42],[r,r*.36]], 1.4, f.color); break;
+    case 'spiral':
+      for (let i = 0; i < 3; i++) oval(0,0,r*(.53+i*.37),r*(.42+i*.32),3-i*.6,p*8+i*1.4,p*8+i*1.4+2.1); break;
+    case 'wind':
+      ctx.scale(f.d,1);
+      for (let i = 0; i < 3; i++) oval(-i*6,-i*4,r*(1+i*.22),r*(.43+i*.06),2,-2.8+i*.3,.7+i*.54,-.32); break;
+    case 'pulse':
+      for (let j = 0; j < 2; j++) {
+        const rr = r * (j ? .64 : 1);
+        path(Array.from({length: 9}, (_, i) => [Math.cos(i*Math.PI/4)*rr,Math.sin(i*Math.PI/4)*rr*.76]), j ? 2 : 4);
+      } break;
+    case 'beacon':
+      oval(0,-3,r*4*size,r*.55,3); oval(0,-6,r*2.7*size,r*.43,1.5);
+      ctx.globalAlpha *= .58; path([[-26,0],[-14,-99],[14,-99],[26,0]], 1, f.color, true);
+      drawWeapon(WEAPONS[1], -5, -103, 0, 1); break;
+    case 'tether':
+      path([[0,0],[(f.x2-f.x)*.48,-40],[f.x2-f.x,f.y2-f.y]],2.5); break;
+    case 'grave':
+      oval(0,0,25+r*2,r*.3,5); oval(0,4,34+r*2.45,r*.48,1.5);
+      ctx.fillStyle='#181018'; ctx.beginPath(); ctx.ellipse(0,0,16+r*1.7,r*.24,0,0,7); ctx.fill();
+      shards(12,110,() => path([[0,0],[0,-12],[4,-6]],2)); break;
+    case 'moonstep': {
+      const dx = f.x2-f.x;
+      path([[0,16],[dx,-34]],5,'#eef3ff'); path([[0,21],[dx,-26]],2,'#b68cff');
+      for (let i=1;i<=5;i++) oval(dx*i/6,-8,34,57,2,-1.35,1.15,.55*f.d);
+      break;
+    }
+    case 'procession':
+      for (let i=-2;i<=2;i++) {
+        oval(i*73,38,22+r*.45,9+r*.18,3);
+        path([[i*73-8,38],[i*73-4,-31-p*65],[i*73+8,38]],1,f.color,true);
+      } break;
+    case 'harvest':
+      for (let i=0;i<3;i++) oval(0,0,34+r*2.4,18+r*(.84+i*.18),3,i*2+p*4,i*2+p*4+2.1,-.15);
+      break;
+    case 'meteor':
+      if (f.t < .55) {
+        const lift = 285 * (1 - Math.pow(clamp01(f.t/.55), 3));
+        drawWeapon(WEAPONS.find(w => w.id === 'hammer'), 0, -lift-52, 1.57, 1);
+        path([[0,-lift-45],[-28,-lift-116],[19,-lift-98]], 1, '#ffba6a', true);
+      }
+      oval(0,0,35+r*2,8+r*.3,4); break;
+    case 'sky':
+      ctx.scale(f.d,1); path([[0,-f.y-20],[-20,-f.y*.68],[12,-f.y*.48],[-9,-f.y*.23],[0,0]],7,'#fff3a9');
+      path([[12,-f.y*.48],[58,-f.y*.35],[39,-f.y*.18]],3); oval(0,0,r*1.5,r*.45,2); break;
+    case 'title':
+      break;
+  }
+  ctx.restore();
+}
+function drawCombatTitle() {
+  const f = combatFX.find(e => e.kind === 'title');
+  if (!f) return;
+  const fade = Math.min(1, (f.duration - f.t) * 4, (f.t + .055) * 10);
+  ctx.save(); ctx.globalAlpha = fade;
+  ctx.font = 'italic 900 36px "Trebuchet MS", sans-serif'; ctx.textAlign = 'center';
+  ctx.strokeStyle = '#0a0c18'; ctx.lineWidth = 6; ctx.strokeText(f.name.toUpperCase(), W / 2, H * .36);
+  ctx.fillStyle = f.color; ctx.fillText(f.name.toUpperCase(), W / 2, H * .36);
+  ctx.restore();
+}
+
 function scaled(name) { const a = ATK[name], w = weapon(); return { ...a, dur: a.dur * w.speed, hit: a.hit * w.speed, reach: a.reach + w.reach, dmg: a.dmg * w.dmg }; }
 
 // ---------- state ----------
@@ -405,7 +680,11 @@ class Fighter {
   }
   atk(name) {
     this.state = name; this.t = 0; this.did = false; this.blocking = false; this.cur = this.isP ? scaled(name) : ATK[name]; this.did2 = false;
-    sfx(name === 'kick' ? 260 : 340, .07, 'triangle', .04);
+    const w = this.isP ? weapon() : null;
+    this.dive = name === 'kick' && !this.gr;
+    if (w && !(this.dive || (w.id === 'fists' && name === 'kick'))) {
+      sfx(COMBAT[w.id][7] * 1.33, .075, 'triangle', .045);
+    } else sfx(name === 'kick' ? 260 : 340, .07, 'triangle', .04);
     if (this.isP) { eat('p'); eat('k'); tick(name); if (name === 'kick' && !this.gr) tick('airkick'); }
   }
   update(dt, c) {
@@ -430,7 +709,7 @@ class Fighter {
     } else if (this.state === 'punch' || this.state === 'kick') {
       const a = this.cur; this.t += dt; this.vx *= .85;
       if (!this.did && this.t >= a.hit) { this.did = true; strike(this, a); }
-      if (this.did && !this.did2 && this.isP && weapon().twin && this.t >= a.hit + .09) { this.did2 = true; strike(this, a); }
+      if (this.did && !this.did2 && this.isP && !this.dive && weapon().twin && this.t >= a.hit + .09) { this.did2 = true; strike(this, a); }
       if (this.t >= a.dur) { this.state = 'idle'; this.t = 0; }
     } else {
       this.blocking = !!c.b && this.gr; if (this.blocking && this.isP) tick('block');
@@ -490,6 +769,12 @@ function strike(a, atk) {
       t.vx = a.dir * atk.kb * t.T.stm;
       if (atk.k) { t.vy = -220; t.gr = false; }
       if (a.isP) {
+        if (!a.dive) {
+          const [push, recovery] = WEAPON_RECOIL[w.id];
+          t.vx *= push; t.stun *= recovery;
+          if (w.id === 'shovel' && atk.k) t.vy = -380;
+          if (w.id === 'hammer' && atk.k) t.vy = -130;
+        }
         if (w.leech) player.hp = Math.min(player.max, player.hp + dmg * w.leech);
         if (w.lift && !atk.k) { t.vy = -300; t.gr = false; }
         if (w.dot) { t.dot = w.dot[1]; t.dps = w.dot[0]; }
@@ -501,14 +786,19 @@ function strike(a, atk) {
         if (w.chain) {
           let n = 0;
           for (const o of enemies) if (o !== t && o.state !== 'dead' && n < 2 && Math.abs(o.x - t.x) < 240) {
-            n++; bolts.push({ x1: t.x, y1: t.y - 50, x2: o.x, y2: o.y - 50, l: .18 }); hurt(o, dmg * .4, a.dir); sparks(o.x, o.y - 50, '#ffe066', 6);
+            n++;
+            if (w.id === 'lantern') combatFx('tether', t.x, t.y - 53, a.dir, w.c, .3, { x2: o.x, y2: o.y - 50 });
+            else bolts.push({ x1: t.x, y1: t.y - 50, x2: o.x, y2: o.y - 50, l: .18 });
+            hurt(o, dmg * .4, a.dir); sparks(o.x, o.y - 50, w.c, 6);
           }
         }
         if (w.frac) sparks(mx, my, '#9affc8', 10);
       }
-      sparks(mx, my, '#ffd166', 10); freeze = .06;
-      shake = Math.max(shake, atk.k ? 9 : 5);
-      sfx(atk.k ? 90 : 140, .1, 'sawtooth', .08);
+      if (a.isP && !a.dive) weaponImpact(w, t.x - a.dir * 11 * t.s, my, a.dir, !!atk.k, t);
+      else {
+        sparks(mx, my, '#ffd166', 10); freeze = Math.max(freeze, .06);
+        shake = Math.max(shake, atk.k ? 9 : 5); sfx(atk.k ? 90 : 140, .1, 'sawtooth', .08);
+      }
       if (a.isP) { combo++; comboT = 2; score += 5 * combo; ult = Math.min(100, ult + (atk.k ? 10 : 7) * (w.ultx || 1) * (has('charge') ? 1.3 : 1)); if (combo >= 5) tick('combo'); }
       else { combo = 0; ult = Math.min(100, ult + 6); }
     }
@@ -593,8 +883,8 @@ function sparks(x, y, col, n) {
 }
 
 // ---------- ultimate and training ----------
-const TRAIN = [['move','Walk (A / D)'], ['jump','Jump (W)'], ['jumpmove','Jump and move (W + D together)'], ['punch','Punch (J)'],
-  ['kick','Kick (K)'], ['block','Block (hold L)'], ['dash','Dash (Shift or I)'], ['airkick','Air kick (jump, then K)'],
+const TRAIN = [['move','Walk (A / D)'], ['jump','Jump (W)'], ['jumpmove','Jump and move (W + D together)'], ['punch','Attack (J)'],
+  ['kick','Heavy attack (K)'], ['block','Block (hold L)'], ['dash','Dash (Shift or I)'], ['airkick','Air kick (jump, then K)'],
   ['dive','Dive kick (in air: S + K)'], ['combo','Land a 5 hit combo'], ['ult','Ultimate (U)']];
 function tick(n) {
   if (!training || done[n]) return;
@@ -614,36 +904,56 @@ function summonAlly(x) {
 }
 function ultimate() {
   const w = weapon(), U = w.ult, alive = enemies.filter(e => e.state !== 'dead'), pd = player.dir;
-  if (U === 'shock') return shock();
+  const cast = startSignature(w);
+  const effect = (kind, x, y, duration, extra = {}) => combatFx(kind, x, y, pd, cast.color, duration, extra);
+  if (U === 'shock') { effect('pulse', player.x, player.y - 43, .66, { size: 4.6 }); return shock(); }
   ult = 0; tick('ult'); player.inv = Math.max(player.inv, .5); sfx(90, .4, 'sawtooth', .1); shake = 12;
-  const each = (d, st) => { for (const e of alive) { hurt(e, d, e.x < player.x ? -1 : 1); if (e.state !== 'dead') { e.state = 'hit'; e.t = 0; e.stun = st; e.flash = .15; } sparks(e.x, e.y - 50, w.c, 10); } };
-  if (U === 'cyclone') cyc = 1.4;
+  const each = (damage, stun) => {
+    for (const e of alive.filter(ultimateTarget)) {
+      castDamage(e, damage, e.x < player.x ? -1 : 1, stun);
+      sparks(e.x, e.y - 50, w.c, 10);
+    }
+  };
+  if (U === 'cyclone') { cyc = 1.4; effect('wind', cast.x, cast.y - 50, .48, { size: 3.2 }); }
   else if (U === 'haunt') {
+    effect('procession', player.x, player.y - 38, 1.25);
     for (let i = 0; i < 3; i++) summonAlly(player.x + pd * (70 + i * 60));
     for (let i = 0; i < 3; i++) spooks.push({ k: 'spirit', x: player.x + (i - 1) * 40, y: player.y - 90 - i * 12, sp: 330, r: 28, life: 9, h: new Set(), t: i, d: pd });
     for (let i = 0; i < 2; i++) spooks.push({ k: 'ghost', x: player.x - pd * (40 + i * 50), y: player.y - 60, sp: 200, r: 46, life: 10, h: new Set(), t: i * 2, d: pd });
     sparks(player.x, player.y - 40, '#9affc8', 30); sfx(180, .6, 'sine', .1);
   }
-  else if (U === 'daggers') for (let i = 0; i < 5; i++) shots.push({ x: player.x, y: player.y - 80 + i * 14, vx: pd * 950, dmg: 45, life: 1, c: '#c7cde0', dot: 1 });
+  else if (U === 'daggers') for (let i = -2; i <= 2; i++) {
+    shots.push({ form: 'daggers', x: player.x + pd * 25, y: player.y - 53 + i * 8,
+      vx: pd * (950 - 65 * Math.abs(i)), vy: i * 97, dmg: 45, life: .81, c: w.c, dot: 1, rangeY: 36 });
+  }
   else if (U === 'fury') fury = { n: 10, t: 0 };
   else if (U === 'dash') {
-    const x0 = player.x, x1 = Math.max(boundL + 30, Math.min(boundR - 30, x0 + pd * 640)); bolts.push({ x1: x0, y1: player.y - 40, x2: x1, y2: player.y - 40, l: .3 });
-    for (const e of alive) if ((e.x - x0) * pd > -20 && (e.x - x1) * pd < 20) { hurt(e, 85, pd); if (e.state !== 'dead') { e.state = 'hit'; e.t = 0; e.stun = .6; } sparks(e.x, e.y - 50, '#fff', 12); }
+    const x0 = player.x, x1 = Math.max(boundL + 30, Math.min(boundR - 30, x0 + pd * 640)); effect('moonstep', x0, player.y - 56, .56, { x2: x1 });
+    for (const e of alive) if ((e.x - x0) * pd > -20 && (e.x - x1) * pd < 20) castDamage(e, 85, pd, .6);
     player.x = x1; player.inv = .5; shake = 16;
   } else if (U === 'smash') {
     const n = alive.sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))[0];
     smash = { x: n ? n.x : Math.max(boundL + 60, Math.min(boundR - 60, player.x + pd * 220)), t: .55 };
-  } else if (U === 'blizzard') { each(30, 1.2); for (const e of alive) e.slow = 5; }
-  else if (U === 'harvest') { each(40, .4); player.hp = Math.min(player.max, player.hp + 10 * alive.length); }
-  else if (U === 'firewave') shots.push({ x: player.x, y: player.y - 35, vx: pd * 520, dmg: 40, life: 1.4, c: '#ff7b3a', big: 1, dot: 1 });
-  else if (U === 'storm') { for (const e of alive) bolts.push({ x1: e.x, y1: 0, x2: e.x, y2: e.y - 40, l: .3 }); each(55, .5); }
+    effect('meteor', smash.x, GY, .75);
+  } else if (U === 'harvest') {
+    effect('harvest', cast.x, cast.y - 58, .92);
+    const targets = alive.filter(ultimateTarget);
+    for (const e of targets) effect('tether', e.x, e.y - 46, .74, { x2: cast.x, y2: cast.y - 55 });
+    each(40, .4); player.hp = Math.min(player.max, player.hp + 10 * targets.length);
+  } else if (U === 'firewave') {
+    shots.push({ form: 'inferno', x: player.x, y: player.y - 43, vx: pd * 520, dmg: 40, life: 1.4, c: w.c, big: 1, dot: 1 });
+  } else if (U === 'storm') {
+    for (const e of alive.filter(ultimateTarget)) effect('sky', e.x, e.y - 45, .45);
+    if (!alive.some(ultimateTarget)) effect('sky', player.x, player.y - 45, .45);
+    each(55, .5);
+  }
 }
 function shock() {
   ult = 0; player.inv = .9; shake = 26; freeze = .12; ring = .5; tick('ult'); sfx(70, .5, 'sawtooth', .12);
   sparks(player.x, player.y - 40, '#ffd166', 40); sparks(player.x, player.y - 40, '#ff4d6d', 24);
   for (const e of enemies) {
     const d = e.x - player.x;
-    if (e.state === 'dead' || e.rise > 0 || Math.abs(d) > 320) continue;
+    if (!ultimateTarget(e) || Math.abs(d) > 320) continue;
     const dir = d < 0 ? -1 : 1;
     e.hp -= 45; e.state = 'hit'; e.t = 0; e.stun = .9; e.flash = .2; e.vx = dir * 520; e.vy = -420; e.gr = false;
     sparks(e.x, e.y - 50, '#ffd166', 10);
@@ -705,6 +1015,7 @@ function toHome() {
   devRun = false; mode = 'menu'; training = false; tut = null; talk = null; npc = null; afterShop = null;
   enemies = []; allies = []; spooks = []; shots = []; parts = []; drops = []; bolts.length = 0; queue = [];
   platforms.length = pits.length = spikes.length = 0; objs = []; strikes = []; blasts = []; rage = 0; apart.length = 0; lastMi = -1; cam = lockX = 0; locked = true; cleared = false; boundL = 0; boundR = W; curZone = 0;
+  combatFX.length = 0; ultimateCast = null;
   wave = shake = freeze = ring = cyc = 0; smash = null; fury = null; bannerT = 0; amb = .4;
   player = new Fighter(W / 2, GY, 'hero', true);
   for (const id of ['menu', 'diff', 'shop']) $(id).classList.add('hide');
@@ -733,8 +1044,8 @@ const TUT = [
   { k: 'move', t: 'Move', d: 'Walk left and right with A / D, or use the joystick.' },
   { k: 'jump', t: 'Jump', d: 'Press W or Space, or push the joystick up. Try hopping onto a platform.' },
   { k: 'dash', t: 'Dash', d: 'Press Shift (or the Dash button). You are invincible for an instant mid-dash.' },
-  { k: 'punch', t: 'Punch', d: 'Press J (or Punch). Quick and light.' },
-  { k: 'kick', t: 'Kick', d: 'Press K (or Kick). Slower, but hits harder and launches enemies.' },
+  { k: 'punch', t: 'Attack', d: 'Press J or tap Attack for a quick strike.' },
+  { k: 'kick', t: 'Heavy attack', d: 'Press K or tap Heavy. It hits harder and launches enemies. In the air, it becomes a kick.' },
   { k: 'block', t: 'Block', d: 'Hold L or S, or pull the joystick down, to guard against hits.' },
   { k: 'mobs', t: 'Test zombies', d: 'Zombies claw their way out of the ground. Defeat all 3. Landing hits charges your ultimate: press U (or Ult) to unleash it.' },
   { k: 'reaper', t: 'The Reaper', d: 'A training Reaper approaches with his scythe. Block, dash, and strike back until he falls.' },
@@ -791,6 +1102,7 @@ function start(isTrain, from, d, isTut) {
   wave = score = kills = combo = comboT = shake = freeze = waveWait = overT = ult = ring = 0;
   training = !!(isTrain || isTut); tut = isTut ? { step: 0, t: 0, spawned: 0 } : null;
   if (d) { diff = d; if (!training) { try { localStorage.setItem(LD_KEY, d); } catch (e) {} } }
+  combatFX.length = 0; ultimateCast = null;
   Object.keys(done).forEach(k => delete done[k]); drops = []; shots = []; cyc = 0; smash = null; fury = null; reviveUsed = false;
   $('foe').classList.toggle('off', !training || !!tut); resetLeave();
   Object.keys(buf).forEach(k => buf[k] = -9);
@@ -857,9 +1169,10 @@ function victory() {
 function update(dt) {
   clock += dt; shake = Math.max(0, shake - 60 * dt);
   if (freeze > 0) { freeze -= dt; return; }
+  updateSignature(dt);
   time += dt; bannerT = Math.max(0, bannerT - dt); ring = Math.max(0, ring - dt);
   if (want('e')) { eat('e'); interact(); }
-  if (want('x') && ult >= 100 && !talk && player.state !== 'dead' && player.state !== 'hit') { eat('x'); ultimate(); }
+  if (want('x') && ult >= 100 && !ultimateCast && !talk && player.state !== 'dead' && player.state !== 'hit') { eat('x'); ultimate(); }
   for (const p of platforms) if (p.amp) { const nx = p.ox + Math.sin(clock * p.sp + p.ph) * p.amp; p.dx = nx - p.x; p.x = nx; } else p.dx = 0;
   boundL = lockX; boundR = training || locked ? lockX + W : 1e9;
   objsUpdate(dt); ambUpdate(dt); mapCheck(dt);
@@ -933,32 +1246,46 @@ function update(dt) {
   drops = drops.filter(c => !c.got && c.t < 20 && c.y < H + 80);
   for (let i = bolts.length - 1; i >= 0; i--) if ((bolts[i].l -= dt) <= 0) bolts.splice(i, 1);
   for (const s of shots) {
-    s.x += s.vx * dt; s.life -= dt; s.h = s.h || new Set();
-    for (const e of enemies) if (e.state !== 'dead' && !s.h.has(e) && Math.abs(e.x - s.x) < (s.big ? 40 : 22) && Math.abs(e.y - 45 - s.y) < 60) {
-      s.h.add(e); hurt(e, s.dmg, Math.sign(s.vx));
-      if (e.state !== 'dead') { e.state = 'hit'; e.t = 0; e.stun = .35; e.vx = Math.sign(s.vx) * 200; }
-      if (s.dot) { e.dot = 4; e.dps = 12; }
-      sparks(e.x, e.y - 50, s.c, 8); if (!s.big) s.life = 0;
+    const x0 = s.x;
+    s.x += s.vx * dt; s.y += (s.vy || 0) * dt; s.life -= dt; s.h ||= new Set();
+    const reach = s.big ? 40 : 22, dir = Math.sign(s.vx);
+    for (const e of enemies) {
+      if (!ultimateTarget(e) || s.h.has(e) || e.x < Math.min(x0, s.x) - reach ||
+          e.x > Math.max(x0, s.x) + reach || Math.abs(e.y - 45 - s.y) >= (s.rangeY || 60)) continue;
+      s.h.add(e); castDamage(e, s.dmg, dir, .35);
+      if (s.dot && e.state !== 'dead') { e.dot = 4; e.dps = 12; }
+      combatFx(s.form === 'cleaver' ? 'cleave' : s.form === 'inferno' ? 'ember' : 'cross', e.x, e.y - 45, dir, s.c);
+      if (!s.big) { s.life = 0; break; }
     }
   }
-  shots = shots.filter(s => s.life > 0 && s.x > cam - 50 && s.x < cam + W + 50);
+  shots = shots.filter(s => s.life > 0 && s.x > cam - 100 && s.x < cam + W + 100);
   if (cyc > 0) {
     cyc -= dt; player.inv = .2;
     if (((cyc * 5) | 0) !== (((cyc + dt) * 5) | 0)) {
-      shake = 6; sparks(player.x, player.y - 40, '#d9b36c', 10);
-      for (const e of enemies) if (e.state !== 'dead' && Math.abs(e.x - player.x) < 190) { hurt(e, 18, e.x < player.x ? -1 : 1); e.x += (player.x - e.x) * .25; e.vy = -200; e.gr = false; }
+      shake = 6; combatFx('wind', player.x, player.y - 45, player.dir, '#e9d394', .36, { size: 2.7 });
+      for (const e of enemies) if (ultimateTarget(e) && Math.abs(e.x - player.x) < 190) {
+        castDamage(e, 18, e.x < player.x ? 1 : -1, .24, -200);
+        if (e.state !== 'dead') e.x += (player.x - e.x) * .25;
+      }
     }
   }
   if (smash && (smash.t -= dt) <= 0) {
     shake = 32; freeze = .1; sparks(smash.x, GY, '#9a8f7a', 40); sparks(smash.x, GY, '#ffd166', 20); sfx(50, .5, 'sawtooth', .12);
-    for (const e of enemies) if (e.state !== 'dead' && Math.abs(e.x - smash.x) < 150) { hurt(e, 130, e.x < smash.x ? -1 : 1); e.state = 'hit'; e.t = 0; e.stun = 1; e.vy = -450; e.gr = false; }
+    combatFx('quake', smash.x, GY, 1, '#ffc36a', .62, { size: 1.9 });
+    for (const e of enemies) if (Math.abs(e.x - smash.x) < 150) castDamage(e, 130, e.x < smash.x ? -1 : 1, 1, -450);
     smash = null;
   }
   if (fury && (fury.t -= dt) <= 0) {
     fury.t = .07; player.inv = .3;
-    const e = enemies.filter(x => x.state !== 'dead').sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))[0];
+    const e = enemies.filter(ultimateTarget).sort((a, b) => Math.abs(a.x - player.x) - Math.abs(b.x - player.x))[0];
     if (!e || --fury.n < 0) fury = null;
-    else { player.dir = e.x > player.x ? 1 : -1; player.x = e.x - player.dir * 40; hurt(e, 14, player.dir); e.stun = .2; e.state = 'hit'; e.t = 0; sparks(e.x, e.y - 50, '#fff', 4); sfx(200 + fury.n * 20, .04, 'square', .05); }
+    else {
+      player.dir = e.x > player.x ? 1 : -1;
+      player.x = Math.max(boundL + 30, Math.min(boundR - 30, e.x - player.dir * 40));
+      castDamage(e, 14, player.dir, .2);
+      combatFx('spiral', e.x, e.y - 54, player.dir, '#f8c183', .25, { size: .8 });
+      sfx(200 + fury.n * 20, .04, 'square', .05);
+    }
   }
   if (comboT > 0 && (comboT -= dt) <= 0) combo = 0;
   if (player.state === 'dead') { if ((overT += dt) > 1.6) gameOver(); return; }
@@ -1669,7 +1996,11 @@ function drawF(f) {
   if (f.weak) ctx.translate(0, 22 * s);
   ctx.scale(s, s); ctx.lineCap = ctx.lineJoin = 'round'; ctx.lineWidth = 5;
   const skin = C(f.slow > 0 ? '#9fe8ff' : f.c); ctx.strokeStyle = ctx.fillStyle = skin;
-  const lean = (st === 'punch' ? 7 : st === 'kick' ? -7 : st === 'hit' ? -10 : f.blocking ? -3 : 0) + (P ? 0 : 9) + (f.rise > 0 ? 8 : 0);
+  const equippedArt = P ? weapon() : null;
+  const armedAttack = a && P && !f.dive && (st === 'punch' || equippedArt.id !== 'fists');
+  const swing = armedAttack ? combatPose(equippedArt, a, f.t) : null;
+  const cast = P && st !== 'dead' && st !== 'hit' ? ultimateCast : null;
+  const lean = (swing ? swing.lean : st === 'punch' ? 7 : st === 'kick' ? -7 : st === 'hit' ? -10 : f.blocking ? -3 : 0) + (P ? 0 : 9) + (f.rise > 0 ? 8 : 0);
   const hip = -42 + (st === 'idle' && f.gr && !moving ? Math.sin(clock * 4 + f.x) * .6 : 0) - (!P && moving ? Math.abs(Math.sin(f.ph)) * 3 : 0);
   const nx = lean * d, ny = hip - 34, sy = ny + 5, mid = (hip + ny) / 2;
   let fl = [1.45 + sw, 1.5 + sw * .3], bl = [1.7 - sw, 1.65 - sw * .3], fa = [.6 + sw * .5, -1.1], ba = [.9 - sw * .5, -.8];
@@ -1677,7 +2008,21 @@ function drawF(f) {
   if (!f.gr && st === 'idle') { fl = [1, 1.9]; bl = [1.9, 1.3]; fa = [-.5, -1.3]; ba = [-.2, -1.4]; }
   if (f.blocking) { fa = [.2, -1.5]; ba = [.35, -1.4]; }
   if (st === 'punch') fa = [.6 * (1 - e) - .05 * e, -1.1 * (1 - e)];
-  if (st === 'kick') fl = [1.45 - 1.65 * e, 1.5 - 1.65 * e];
+  if (st === 'kick' && !swing) fl = [1.45 - 1.65 * e, 1.5 - 1.65 * e];
+  if (swing) {
+    fa = swing.arm;
+    if (equippedArt.twin) ba = [.8, -1.1];
+    if (equippedArt.twin && f.t > a.hit + .035) {
+      ba = combatPose(equippedArt, a, Math.max(0, f.t - .09)).arm; fa = [.72, -1.2];
+    }
+    if (a.k && f.gr) { fl = [1.12, 1.37]; bl = [2.03, 1.70]; }
+  } else if (cast && cast.t < .66) {
+    const pose = COMBAT[cast.id];
+    fa = [-.42, -.95 + Math.sin(cast.t * 7) * .9];
+    ba = [-.78, -.65];
+    if (cast.id === 'nunchucks') { fa = [Math.sin(cast.t * 52), Math.cos(cast.t * 52)]; }
+    else if (cast.id === 'staff') { fa = [-.25, pose[2] + cast.t * 9]; }
+  }
   if (st === 'hit' || st === 'dead') { fa = [2, 2.4]; ba = [2.4, 2.6]; fl = [1.2, 1.9]; bl = [1.9, 1.5]; }
   if (f.rise > 0) { const ph = Math.sin(rp * 26); fa = [.5 + ph * .4, 1 + ph * .3]; ba = [.8 - ph * .4, 1.2 - ph * .3]; }
   if (f.weak) { fa = [2, 2.4]; ba = [2.4, 2.6]; fl = [1.2, 1.9]; bl = [1.9, 1.5]; }
@@ -1692,8 +2037,10 @@ function drawF(f) {
   }
   ctx.globalAlpha = .75; ctx.strokeStyle = P ? C('#6c7590') : skin; ctx.lineWidth = 5;
   const bL = limb(0, hip, bl, d), bA = limb(nx, sy, ba, d, 17); P ? (legP(bL), armP(bA)) : (legZ(bL), armZ(bA));
-  if (P && ['daggers', 'thunder', 'fists'].includes(weapon().id)) {
-    drawWeapon(weapon(), bA[2], bA[3], ba[1], d, fh, clock + .4);
+  if (P && ['daggers', 'thunder', 'fists'].includes(equippedArt.id)) {
+    const rearAngle = swing && equippedArt.twin && f.t > a.hit + .035
+      ? combatPose(equippedArt, a, f.t - .09).angle : ba[1];
+    drawWeapon(equippedArt, bA[2], bA[3], rearAngle, d, fh, clock + .4);
   }
   ctx.globalAlpha = 1;
   // torso
@@ -1713,9 +2060,19 @@ function drawF(f) {
   ctx.strokeStyle = P ? C('#6c7590') : skin; ctx.lineWidth = 5;
   const fL = limb(0, hip, fl, d), fA = limb(nx, sy, fa, d, 17); P ? (legP(fL), armP(fA)) : (legZ(fL), armZ(fA));
   if (P) {
-    const w = weapon();
-    const wa = (w.id === 'haunted' || w.id === 'scythe') ? Math.min(.9, fa[1] - .35) : fa[1];
-    drawWeapon(w, fA[2], fA[3], wa, d, fh, clock);
+    const w = equippedArt;
+    const backStrike = swing && w.twin && f.t > a.hit + .035;
+    const wa = swing && !backStrike ? swing.angle : (w.id === 'haunted' || w.id === 'scythe') ? Math.min(.9, fa[1] - .35) : fa[1];
+    if (swing && w.len && Math.abs(f.t - a.hit) < .075 && !backStrike) {
+      const past = combatPose(w, a, Math.max(0, f.t - .04)).angle;
+      ctx.save(); ctx.translate(fA[2], fA[3]); ctx.scale(d, 1);
+      ctx.globalAlpha = .45; ctx.strokeStyle = COMBAT[w.id][6]; ctx.lineWidth = w.id === 'hammer' ? 5 : 2.5;
+      const low = Math.min(past, wa), high = Math.max(past, wa);
+      if (high - low > .07) { ctx.beginPath(); ctx.arc(0, 0, w.len * .93, low, high); ctx.stroke(); }
+      else { ln(Math.cos(wa) * w.len * .5, Math.sin(wa) * w.len * .5, Math.cos(wa) * (w.len + 12), Math.sin(wa) * (w.len + 12)); }
+      ctx.restore();
+    }
+    drawWeapon(w, fA[2], fA[3], wa, d, fh, swing ? f.t * 8 : clock);
     // Fingers cross the grip; gauntlets and wraps already include their own hand shape.
     if (!['thunder', 'fists'].includes(w.id)) { ctx.fillStyle = C('#cfd6e8'); dot(fA[2], fA[3], 3.6); }
     ctx.fillStyle = C('#b9c3da'); dot(nx, sy, 8.5); ctx.strokeStyle = C('#e0b85a'); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(nx, sy, 8.5, 0, 7); ctx.stroke();
@@ -1844,14 +2201,14 @@ function hud() {
   ctx.fillStyle = '#9affc8'; ctx.fillText(weapon().name, W - 24, 120);
   ctx.textAlign = 'center';
   if (combo > 1) { ctx.font = `italic 900 ${28 + Math.min(combo, 12)}px "Trebuchet MS", sans-serif`; ctx.fillStyle = '#ffd166'; ctx.fillText(`${combo} hit combo`, W / 2, 90); }
-  if (bannerT > 0) {
+  if (bannerT > 0 && !combatFX.some(effect => effect.kind === 'title')) {
     ctx.globalAlpha = Math.min(1, bannerT * 2); ctx.fillStyle = '#fff'; ctx.font = `italic 900 ${bannerText.length > 28 ? 34 : 56}px "Trebuchet MS", sans-serif`;
     ctx.fillText(bannerText, W / 2, 200); ctx.globalAlpha = 1;
   }
   if (cleared && Math.sin(clock * 6) > 0) { ctx.font = 'italic 900 30px "Trebuchet MS", sans-serif'; ctx.fillStyle = '#7fe0a0'; ctx.fillText('ADVANCE \u2192', W - 120, H / 2); }
   if (mode === 'play' && !training && wave <= 2) {
     ctx.globalAlpha = .6; ctx.fillStyle = '#f3efe6'; ctx.font = '700 15px "Trebuchet MS", sans-serif';
-    ctx.fillText('A / D move    W jump    J punch    K kick    L block    Shift dash    U ultimate', W / 2, H - 22); ctx.globalAlpha = 1;
+    ctx.fillText('A / D move    W jump    J attack    K heavy    L block    Shift dash    U ultimate', W / 2, H - 22); ctx.globalAlpha = 1;
   }
   if (!training) {
     ctx.font = '700 14px "Trebuchet MS", sans-serif'; ctx.textAlign = 'right';
@@ -1879,9 +2236,17 @@ function draw() {
   ctx.globalAlpha = 1;
   for (const c of drops) { ctx.fillStyle = '#ffd166'; ctx.strokeStyle = '#b8860b'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(c.x, c.y, 6, 0, 7); ctx.fill(); ctx.stroke(); }
   for (const s of shots) {
-    ctx.strokeStyle = ctx.fillStyle = s.c;
-    if (s.big) { ctx.globalAlpha = .75; ctx.beginPath(); ctx.arc(s.x, s.y, 34, 0, 7); ctx.fill(); ctx.globalAlpha = 1; } else drawWeapon({ id: 'daggers', len: 16, c: s.c }, s.x - Math.sign(s.vx) * 20, s.y, 0, Math.sign(s.vx), false, clock);
+    const dir = Math.sign(s.vx);
+    if (s.form === 'cleaver' || s.form === 'inferno') {
+      const form = s.form === 'cleaver' ? 'crescentShot' : 'ember';
+      drawCombatEffect({ kind: form, x: s.x, y: s.y, d: dir, color: s.c, duration: 1, t: .39,
+        size: form === 'ember' ? 2.6 : 1.28 });
+    } else {
+      const angle = Math.atan2(s.vy || 0, Math.abs(s.vx));
+      drawWeapon({ id: 'daggers', len: 16, c: s.c }, s.x - dir * 20, s.y, angle, dir, false, clock);
+    }
   }
+  for (const effect of combatFX) if (effect.kind !== 'title') drawCombatEffect(effect);
   if (smash) { ctx.strokeStyle = 'rgba(255,77,109,.85)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.ellipse(smash.x, GY + 2, 150, 26, 0, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.ellipse(smash.x, GY + 2, 150 * (1 - smash.t / .55), 26 * (1 - smash.t / .55), 0, 0, 7); ctx.stroke(); }
   ctx.strokeStyle = '#ffe066'; ctx.lineWidth = 3;
   for (const b of bolts) { ctx.beginPath(); ctx.moveTo(b.x1, b.y1); ctx.lineTo((b.x1 + b.x2) / 2 + (Math.random() - .5) * 30, (b.y1 + b.y2) / 2 + (Math.random() - .5) * 30); ctx.lineTo(b.x2, b.y2); ctx.stroke(); }
@@ -1889,7 +2254,7 @@ function draw() {
   ctx.restore(); ambDraw();
   if (flashT > 0) { ctx.fillStyle = `rgba(255,255,255,${Math.min(.8, flashT * 4)})`; ctx.fillRect(0, 0, W, H); }
   if (mapFade > 0) { ctx.fillStyle = `rgba(0,0,0,${Math.min(1, mapFade * 1.6)})`; ctx.fillRect(0, 0, W, H); }
-  ctx.restore(); hud();
+  ctx.restore(); hud(); if (mode === 'play' || mode === 'pause') drawCombatTitle();
 }
 
 // ---------- TEMPORARY wave test tool: set DEV_WAVE_SELECTOR=false (or delete this block) when told the code 1234567890 ----------
